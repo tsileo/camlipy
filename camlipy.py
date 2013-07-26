@@ -2,14 +2,19 @@
 import urlparse
 import logging
 import hashlib
+import uuid
+import os
 
 import requests
 import simplejson as json
+import gnupg
 
 CAMLIVERSION = 1
 MAX_STAT_BLOB = 1000
 
 log = logging.getLogger(__name__)
+
+gpg = gnupg.GPG(gnupghome=os.path.expanduser('~/.config/camlistore'))
 
 
 def compute_hash(data, blocksize=4096):
@@ -50,8 +55,11 @@ class Camlistore(object):
         self.server = server
         self.auth = auth
         self.conf = self._conf_discovery()
+        
         self.url_blobRoot = urlparse.urljoin(self.server,
-                                             self.conf.get('blobRoot'))
+                                             self.conf['blobRoot'])
+        self.url_signHandler = urlparse.urljoin(self.server,
+                                                self.conf['signing']['signHandler'])
 
     def _conf_discovery(self):
         """ Perform a discovery to gather server configuration. """
@@ -114,4 +122,15 @@ class Camlistore(object):
         r = requests.post(stat_res['uploadUrl'], files=r_files, auth=self.auth)
         r.raise_for_status()
 
+        return r.json()
+
+    def new_permanode(self):
+        permanode = {'camliVersion': CAMLIVERSION,
+                     'camliSigner': 'sha1-5b35ff5a8baaae8ccac5c32338ce3795bbebc710',
+                     'random': str(uuid.uuid4()),
+                     'camliType': 'permanode'}
+        return self.sign(permanode)
+
+    def sign(self, data):
+        r = requests.post(self.url_signHandler, data={'json': json.dumps(data)}, auth=self.auth)
         return r.json()
