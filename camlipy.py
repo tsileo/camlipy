@@ -19,6 +19,7 @@ log = logging.getLogger(__name__)
 
 
 def get_stat_info(path):
+    print path
     file_stat = os.stat(path)
     return {"unixOwnerId": file_stat.st_uid,
             "unixGroupId": file_stat.st_gid,
@@ -83,6 +84,9 @@ class Camlistore(object):
         r.raise_for_status()
         return r.json()
 
+    def get_hash(self, blob):
+        return 'sha1-{0}'.format(compute_hash(blob))
+
     def get_blob(self, blobref):
         """ Retrieve blob content. """
         log.debug('Fetching blobref:{0}'.format(blobref))
@@ -122,6 +126,7 @@ class Camlistore(object):
         blobrefs_stat = set([s['blobRef'] for s in stat_res['stat']])
 
         blobrefs_missing = blobrefs - blobrefs_stat
+        blobrefs_existing = blobrefs - blobrefs_missing
 
         if not blobrefs_missing:
             return
@@ -259,6 +264,18 @@ class StaticSet(Schema):
         self.data.update({'camliType': 'static-set',
                           'members': []})
 
+    def save(self, members=[]):
+        self.data.update({'members': members})
+
+        res = self.con.put_blobs([self.json()])
+        if len(res['received']) == 1:
+            blob_ref = res['received'][0]['blobRef']
+
+            if blob_ref:
+                self.blob_ref = blob_ref
+
+        return self.blob_ref
+
 
 class FileCommon(Schema):
     """ FileCommon schema. """
@@ -279,14 +296,46 @@ class File(FileCommon):
 
     def save(self, permanode=False):
         if self.path and os.path.isfile(self.path):
-            received = self.con.put_blobs([open(self.path, 'rb')])['received']
+            received = self.con.put_blobs([open(self.path, 'rb')])
 
-            self.data.update({'parts': received})
+            if received:
+                received = received['received']
+                self.data.update({'parts': received})
 
-            res = self.con.put_blobs([self.json()])
+                res = self.con.put_blobs([self.json()])
 
-            if len(res['received']) == 1:
-                        blob_ref = res['received'][0]['blobRef']
+                if len(res['received']) == 1:
+                    blob_ref = res['received'][0]['blobRef']
+
+                if blob_ref:
+                    self.blob_ref = blob_ref
+
+                    if permanode:
+                        permanode = Permanode(self.con).save(self.data['fileName'])
+                        Claim(self.con, permanode).set_attribute('camliContent',
+                                                                 blob_ref)
+                        return permanode
+            else:
+                return self.con.get_hash(open(self.path, 'rb'))
+        return self.blob_ref
+
+
+class Directory(FileCommon):
+    """ Directory Shema """
+    def __init__(self, con, path=None, blob_ref=None):
+        super(Directory, self).__init__(con, path, blob_ref)
+        self.data.update({'camliType': 'directory'})
+        if path and os.path.isdir(path):
+            dir_name = os.path.basename(os.path.normpath(path))
+            self.data.update({'fileName': dir_name})
+
+    def _save(self, static_set_blobref, permanode=False):
+        self.data.update({'entries': static_set_blobref})
+
+        res = self.con.put_blobs([self.json()])
+
+        if len(res['received']) == 1:
+            blob_ref = res['received'][0]['blobRef']
 
             if blob_ref:
                 self.blob_ref = blob_ref
@@ -298,3 +347,8 @@ class File(FileCommon):
                     return permanode
 
         return self.blob_ref
+
+    def save(self, files, permanode=False):
+        files_blobrefs = [File(self.con, f).save() for f in files]
+        static_set_blobref = StaticSet(self.con).save(files_blobrefs)
+        return self._save(static_set_blobref, permanode)
