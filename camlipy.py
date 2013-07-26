@@ -4,6 +4,7 @@ import logging
 import hashlib
 import uuid
 import os
+from datetime import datetime
 
 import requests
 import simplejson as json
@@ -55,7 +56,7 @@ class Camlistore(object):
         self.server = server
         self.auth = auth
         self.conf = self._conf_discovery()
-        
+
         self.url_blobRoot = urlparse.urljoin(self.server,
                                              self.conf['blobRoot'])
         self.url_signHandler = urlparse.urljoin(self.server,
@@ -119,18 +120,57 @@ class Camlistore(object):
                 blob_content = blob.read()
             r_files[bref] = (bref, blob_content)
 
-        r = requests.post(stat_res['uploadUrl'], files=r_files, auth=self.auth)
+        r = requests.post(stat_res['uploadUrl'],
+                          files=r_files,
+                          auth=self.auth)
         r.raise_for_status()
 
         return r.json()
 
     def new_permanode(self):
-        permanode = {'camliVersion': CAMLIVERSION,
-                     'camliSigner': 'sha1-5b35ff5a8baaae8ccac5c32338ce3795bbebc710',
-                     'random': str(uuid.uuid4()),
-                     'camliType': 'permanode'}
         return self.sign(permanode)
 
-    def sign(self, data):
-        r = requests.post(self.url_signHandler, data={'json': json.dumps(data)}, auth=self.auth)
-        return r.json()
+
+class Schema(object):
+    def __init__(self, con):
+        self.con = con
+        self.data = {'camliVersion': CAMLIVERSION}
+
+    def _sign(self, data):
+        camli_signer = self.con.conf['signing']['publicKeyBlobRef']
+        self.data.update({'camliSigner': camli_signer})
+        r = requests.post(self.con.url_signHandler,
+                          data={'json': json.dumps(data)},
+                          auth=self.con.auth)
+        r.raise_for_status()
+        return r.text
+
+    def sign(self):
+        return self._sign(self.data)
+
+    def json(self):
+        return json.dumps(self.data, separators=(',', ':'), sort_keys=False)
+
+
+class Permanode(Schema):
+    def __init__(self, con):
+        super(Permanode, self).__init__(con)
+        self.data.update({'random': str(uuid.uuid4()),
+                          'camliType': 'permanode'})
+
+    def save(self):
+        return self.con.put_blobs([self.sign()])
+
+
+class Claim(Schema):
+    def __init__(self, con, permanode_blobref):
+        super(Claim, self).__init__(con)
+        self.data.update({'claimDate': datetime.utcnow().isoformat() + 'Z',
+                          'camliType': 'claim',
+                          'permaNode': permanode_blobref})
+
+    def set_attribute(self, attr, val):
+        self.data.update({'claimType': 'set-attribute',
+                          'attribute': attr,
+                          'value': val})
+        return self.con.put_blobs([self.sign()])
