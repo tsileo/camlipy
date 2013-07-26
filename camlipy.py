@@ -4,18 +4,29 @@ import logging
 import hashlib
 import uuid
 import os
+import stat
+import grp
+import pwd
 from datetime import datetime
 
 import requests
 import simplejson as json
-import gnupg
 
 CAMLIVERSION = 1
 MAX_STAT_BLOB = 1000
 
 log = logging.getLogger(__name__)
 
-gpg = gnupg.GPG(gnupghome=os.path.expanduser('~/.config/camlistore'))
+
+def get_stat_info(path):
+    file_stat = os.stat(path)
+    return {"unixOwnerId": file_stat.st_uid,
+            "unixGroupId": file_stat.st_gid,
+            "unixPermission": oct(stat.S_IMODE(file_stat.st_mode)),
+            "unixGroup": grp.getgrgid(file_stat.st_gid).gr_name,
+            "unixOwner": pwd.getpwuid(file_stat.st_uid).pw_name,
+            "unixMtime": datetime.utcfromtimestamp(file_stat.st_mtime).isoformat() + 'Z',
+            "unixCtime": datetime.utcfromtimestamp(file_stat.st_ctime).isoformat() + 'Z'}
 
 
 def compute_hash(data, blocksize=4096):
@@ -223,3 +234,20 @@ class Claim(Schema):
                           'attribute': attr,
                           'value': val})
         return self.con.put_blobs([self.sign()])
+
+
+class StaticSet(Schema):
+	def __init__(self, con):
+		super(StaticSet, self).__init__(con)
+		self.data.update({"camliType": "static-set",
+						  "members": []})
+
+
+class FileCommon(Schema):
+    def __init__(self, con, path):
+        super(FileCommon, self).__init__(con)
+        self.path = path
+
+        self.data.update({"camliType": "file",
+                          "fileName": os.path.basename(path)})
+        self.data.update(get_stat_info(path))
