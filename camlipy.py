@@ -158,8 +158,19 @@ class Permanode(Schema):
         self.data.update({'random': str(uuid.uuid4()),
                           'camliType': 'permanode'})
 
-    def save(self):
-        return self.con.put_blobs([self.sign()])
+    def save(self, title=None, tags=[]):
+        blob_ref = None
+        res = self.con.put_blobs([self.sign()])
+        if len(res['received']) == 1:
+            blob_ref = res['received'][0]['blobRef']
+
+        if blob_ref:
+            if title is not None:
+                Claim(self.con, blob_ref).set_attribute('title', title)
+            for tag in tags:
+                Claim(self.con, blob_ref).add_attribute('tag', tag)
+
+        return blob_ref
 
 
 class Claim(Schema):
@@ -171,6 +182,19 @@ class Claim(Schema):
 
     def set_attribute(self, attr, val):
         self.data.update({'claimType': 'set-attribute',
+                          'attribute': attr,
+                          'value': val})
+        return self.con.put_blobs([self.sign()])
+
+    def del_attribute(self, attr, val=None):
+        self.data.update({'claimType': 'del-attribute',
+                          'attribute': attr})
+        if val is not None:
+            self.data.update({'value': val})
+        return self.con.put_blobs([self.sign()])
+
+    def add_attribute(self, attr, val):
+        self.data.update({'claimType': 'add-attribute',
                           'attribute': attr,
                           'value': val})
         return self.con.put_blobs([self.sign()])
