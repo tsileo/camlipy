@@ -113,6 +113,7 @@ class Camlistore(object):
         return r.json()
 
     def put_blobs(self, blobs):
+        """ Upload blobs using with standard multi-part upload. """
         blobrefs = set(['sha1-{0}'.format(compute_hash(blob)) for blob in blobs])
 
         stat_res = self._stat(blobrefs)
@@ -152,12 +153,20 @@ class Camlistore(object):
 
 
 class Schema(object):
+    """ Basic Schema base class.
+
+    Args:
+        con: Camlistore instance
+        blob_ref: Optional blobRef if the blob already exists.
+
+    """
     def __init__(self, con, blob_ref=None):
         self.con = con
         self.data = {'camliVersion': CAMLIVERSION}
         self.blob_ref = blob_ref
 
     def _sign(self, data):
+        """ Call the signature server to sign json. """
         camli_signer = self.con.conf['signing']['publicKeyBlobRef']
         self.data.update({'camliSigner': camli_signer})
         r = requests.post(self.con.url_signHandler,
@@ -167,22 +176,27 @@ class Schema(object):
         return r.text
 
     def sign(self):
+        """ Return signed json. """
         return self._sign(self.data)
 
     def json(self):
+        """ Return json data. """
         return json.dumps(self.data)
 
     def describe(self):
+        """ Call the API to describe the blob. """
         return self.con.describe_blob(self.blob_ref)
 
 
 class Permanode(Schema):
+    """ Permanode Schema with helpers for claims. """
     def __init__(self, con, blob_ref=None):
         super(Permanode, self).__init__(con, blob_ref)
         self.data.update({'random': str(uuid.uuid4()),
                           'camliType': 'permanode'})
 
     def save(self, title=None, tags=[]):
+        """ Create the permanode, takes optional title and tags. """
         blob_ref = None
         res = self.con.put_blobs([self.sign()])
         if len(res['received']) == 1:
@@ -210,6 +224,7 @@ class Permanode(Schema):
 
 
 class Claim(Schema):
+    """ Claim schema with support for set/add/del attribute. """
     def __init__(self, con, permanode_blobref):
         super(Claim, self).__init__(con)
         self.data.update({'claimDate': datetime.utcnow().isoformat() + 'Z',
@@ -237,13 +252,15 @@ class Claim(Schema):
 
 
 class StaticSet(Schema):
-	def __init__(self, con):
-		super(StaticSet, self).__init__(con)
-		self.data.update({"camliType": "static-set",
-						  "members": []})
+    """ StaticSet schema. """
+    def __init__(self, con):
+        super(StaticSet, self).__init__(con)
+        self.data.update({"camliType": "static-set",
+                          "members": []})
 
 
 class FileCommon(Schema):
+    """ FileCommon schema. """
     def __init__(self, con, path):
         super(FileCommon, self).__init__(con)
         self.path = path
