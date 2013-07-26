@@ -61,6 +61,8 @@ class Camlistore(object):
                                              self.conf['blobRoot'])
         self.url_signHandler = urlparse.urljoin(self.server,
                                                 self.conf['signing']['signHandler'])
+        self.url_searchRoot = urlparse.urljoin(self.server,
+                                               self.conf['searchRoot'])
 
     def _conf_discovery(self):
         """ Perform a discovery to gather server configuration. """
@@ -127,14 +129,22 @@ class Camlistore(object):
 
         return r.json()
 
-    def new_permanode(self):
-        return self.sign(permanode)
+    def describe_blob(self, blobref):
+        """ Return blob meta data. """
+        describe = 'camli/search/describe?blobref={0}'.format(blobref)
+        describe_url = urlparse.urljoin(self.url_searchRoot, describe)
+
+        r = requests.get(describe_url, auth=self.auth)
+        r.raise_for_status()
+
+        return r.json()
 
 
 class Schema(object):
-    def __init__(self, con):
+    def __init__(self, con, blob_ref=None):
         self.con = con
         self.data = {'camliVersion': CAMLIVERSION}
+        self.blob_ref = blob_ref
 
     def _sign(self, data):
         camli_signer = self.con.conf['signing']['publicKeyBlobRef']
@@ -149,12 +159,15 @@ class Schema(object):
         return self._sign(self.data)
 
     def json(self):
-        return json.dumps(self.data, separators=(',', ':'), sort_keys=False)
+        return json.dumps(self.data)
+
+    def describe(self):
+        return self.con.describe_blob(self.blob_ref)
 
 
 class Permanode(Schema):
-    def __init__(self, con):
-        super(Permanode, self).__init__(con)
+    def __init__(self, con, blob_ref=None):
+        super(Permanode, self).__init__(con, blob_ref)
         self.data.update({'random': str(uuid.uuid4()),
                           'camliType': 'permanode'})
 
@@ -165,12 +178,24 @@ class Permanode(Schema):
             blob_ref = res['received'][0]['blobRef']
 
         if blob_ref:
+            self.blob_ref = blob_ref
+
             if title is not None:
                 Claim(self.con, blob_ref).set_attribute('title', title)
             for tag in tags:
                 Claim(self.con, blob_ref).add_attribute('tag', tag)
 
         return blob_ref
+
+    def claims(self):
+        """ Return claims for the current permanode. """
+        claim = 'camli/search/claims?permanode={0}'.format(self.blob_ref)
+        claim_url = urlparse.urljoin(self.con.url_searchRoot, claim)
+
+        r = requests.get(claim_url, auth=self.con.auth)
+        r.raise_for_status()
+
+        return r.json()
 
 
 class Claim(Schema):

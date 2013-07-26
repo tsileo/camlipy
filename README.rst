@@ -6,6 +6,12 @@ Unofficial Python client for `Camlistore <http://camlistore.org/>`_.
 
 This is a work in progress.
 
+TODO
+====
+
+- Handle symlink/hard link (inode)
+- Handle multi-claim in ``Claim``
+- Streaming in ``Camlistore.get_blob``
 
 License (MIT)
 =============
