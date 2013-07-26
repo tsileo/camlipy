@@ -90,6 +90,7 @@ class Camlistore(object):
                                        'camli/{0}'.format(blobref))
 
         # TODO gerer le streaming
+        # TODO handle already existing blobs
         r = requests.get(blobref_url, auth=self.auth)
         r.raise_for_status()
         try:
@@ -255,16 +256,38 @@ class StaticSet(Schema):
     """ StaticSet schema. """
     def __init__(self, con):
         super(StaticSet, self).__init__(con)
-        self.data.update({"camliType": "static-set",
-                          "members": []})
+        self.data.update({'camliType': 'static-set',
+                          'members': []})
 
 
 class FileCommon(Schema):
     """ FileCommon schema. """
-    def __init__(self, con, path):
-        super(FileCommon, self).__init__(con)
+    def __init__(self, con, path=None, blob_ref=None):
+        super(FileCommon, self).__init__(con, blob_ref)
         self.path = path
 
-        self.data.update({"camliType": "file",
-                          "fileName": os.path.basename(path)})
         self.data.update(get_stat_info(path))
+
+
+class File(FileCommon):
+    def __init__(self, con, path=None, blob_ref=None):
+        super(File, self).__init__(con, path, blob_ref)
+        if path and os.path.isfile(path):
+            self.data.update({'camliType': 'file',
+                              'fileName': os.path.basename(path)})
+
+    def save(self):
+        if self.path and os.path.isfile(self.path):
+            received = self.con.put_blobs([open(self.path, 'rb')])['received']
+
+            self.data.update({'parts': received})
+
+            res = self.con.put_blobs([self.json()])
+
+            if len(res['received']) == 1:
+                        blob_ref = res['received'][0]['blobRef']
+
+            if blob_ref:
+                self.blob_ref = blob_ref
+
+        return self.blob_ref
