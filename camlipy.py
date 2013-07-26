@@ -19,7 +19,6 @@ log = logging.getLogger(__name__)
 
 
 def get_stat_info(path):
-    print path
     file_stat = os.stat(path)
     return {"unixOwnerId": file_stat.st_uid,
             "unixGroupId": file_stat.st_gid,
@@ -300,23 +299,23 @@ class File(FileCommon):
 
             if received:
                 received = received['received']
-                self.data.update({'parts': received})
+            # TODO handle if nothing is received because it already there
+            self.data.update({'parts': received})
 
-                res = self.con.put_blobs([self.json()])
+            res = self.con.put_blobs([self.json()])
 
-                if len(res['received']) == 1:
-                    blob_ref = res['received'][0]['blobRef']
-
-                if blob_ref:
-                    self.blob_ref = blob_ref
-
-                    if permanode:
-                        permanode = Permanode(self.con).save(self.data['fileName'])
-                        Claim(self.con, permanode).set_attribute('camliContent',
-                                                                 blob_ref)
-                        return permanode
+            if len(res['received']) == 1:
+                blob_ref = res['received'][0]['blobRef']
             else:
-                return self.con.get_hash(open(self.path, 'rb'))
+                blob_ref = self.con.get_hash(self.json())
+
+            self.blob_ref = blob_ref
+
+            if permanode:
+                permanode = Permanode(self.con).save(self.data['fileName'])
+                Claim(self.con, permanode).set_attribute('camliContent',
+                                                         blob_ref)
+                return permanode
         return self.blob_ref
 
 
