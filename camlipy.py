@@ -191,8 +191,8 @@ class Schema(object):
 
 class Permanode(Schema):
     """ Permanode Schema with helpers for claims. """
-    def __init__(self, con, blob_ref=None):
-        super(Permanode, self).__init__(con, blob_ref)
+    def __init__(self, con, permanode_blob_ref=None):
+        super(Permanode, self).__init__(con, permanode_blob_ref)
         self.data.update({'random': str(uuid.uuid4()),
                           'camliType': 'permanode'})
 
@@ -270,13 +270,14 @@ class FileCommon(Schema):
 
 
 class File(FileCommon):
+    """ File schema with helper for uploading small files. """
     def __init__(self, con, path=None, blob_ref=None):
         super(File, self).__init__(con, path, blob_ref)
         if path and os.path.isfile(path):
             self.data.update({'camliType': 'file',
                               'fileName': os.path.basename(path)})
 
-    def save(self):
+    def save(self, permanode=False):
         if self.path and os.path.isfile(self.path):
             received = self.con.put_blobs([open(self.path, 'rb')])['received']
 
@@ -289,5 +290,11 @@ class File(FileCommon):
 
             if blob_ref:
                 self.blob_ref = blob_ref
+
+                if permanode:
+                    permanode = Permanode(self.con).save(self.data['fileName'])
+                    Claim(self.con, permanode).set_attribute('camliContent',
+                                                             blob_ref)
+                    return permanode
 
         return self.blob_ref
