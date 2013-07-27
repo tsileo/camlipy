@@ -320,7 +320,7 @@ class File(FileCommon):
 
 
 class Directory(FileCommon):
-    """ Directory Shema """
+    """ Directory Schema """
     def __init__(self, con, path=None, blob_ref=None):
         super(Directory, self).__init__(con, path, blob_ref)
         self.data.update({'camliType': 'directory'})
