@@ -3,23 +3,22 @@ import logging
 MAX_BLOB_SIZE = 1 << 20
 FIRST_CHUNK_SIZE = 256 << 10
 TOO_SMALL_THRESHOLD = 64 << 10
-"""
-// bufioReaderSize is an explicit size for our bufio.Reader,
-// so we don't rely on NewReader's implicit size.
-// We care about the buffer size because it affects how far
-// in advance we can detect EOF from an io.Reader that doesn't
-// know its size. Detecting an EOF bufioReaderSize bytes early
-// means we can plan for the final chunk.
+# Buffer to detect EOF in advance.
 bufioReaderSize = 32 << 10
-"""
+
 from rollsum import Rollsum
 from schema import Bytes
 import camlipy
 
 log = logging.getLogger(__name__)
 
+# TODO a buffer to detect EOF
+# TODO handle EOF
+
 
 class Span(object):
+    """ Chunk metadata, used to create the tree,
+    and compute chunk/bytesRef size. """
     def __init__(self, _from, to, bits=None, children=None, chunk_cnt=0):
         self._from = _from
         self.to = to
