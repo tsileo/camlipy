@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+import logging
 MAX_BLOB_SIZE = 1 << 20
 FIRST_CHUNK_SIZE = 256 << 10
 TOO_SMALL_THRESHOLD = 64 << 10
@@ -12,26 +13,24 @@ TOO_SMALL_THRESHOLD = 64 << 10
 bufioReaderSize = 32 << 10
 """
 from rollsum import Rollsum
+from schema import Bytes
+import camlipy
 
-fh = open('', 'rb')
-rs = Rollsum()
+log = logging.getLogger(__name__)
 
-blob_size = 0
-spans = []
-n = 0
-buf = ''
 
 class Span(object):
-    def __init__(self, _from, to, bits=None, children=None, itter=0):
+    def __init__(self, _from, to, bits=None, children=None, chunk_cnt=0):
         self._from = _from
         self.to = to
         self.bits = bits
         self.br = None
         self.children = children
-        self.itter = itter
+        self.chunk_cnt = chunk_cnt
 
     def __repr__(self):
-        return '<Span {0}children iter{1}>'.format(len(self.children), self.itter)
+        return '<Span {0}children iter{1}>'.format(len(self.children),
+                                                   self.chunk_cnt)
 
     def single_blob(self):
         return not len(self.children)
@@ -43,63 +42,74 @@ class Span(object):
         return size
 
 
+class FileWriter(object):
+    def __init__(self, path):
+        self.path = path
+        self.handler = open(self.path, 'rb')
+        self.rs = Rollsum()
+        self.blob_size = 0
+        # Store Span the instance of the chunk
+        self.spans = []
+        # Total size
+        self.n = 0
+        # buffer to store the chunk
+        self.buf = ''
 
+    def upload_last_span(self):
+        chunk = self.buf
+        self.buf = ''
+        blob_ref = 'sha1-{0}'.format(camlipy.compute_hash(chunk))
+        self.spans[-1].br = blob_ref
 
-def upload_last_span():
-    global buf
-    print len(buf)
-    chunk = buf
-    buf = ''
-    br = 'sha1-{0}'.format(camlipy.compute_hash(chunk))
-    spans[len(spans) -1].br = br
-    print br, len(chunk)
+    def chunk(self):
+        chunk_cnt = 0
+        last = 0
+        while 1:
+            c = self.handler.read(1)
+            self.buf += c
+            self.n += 1
+            self.blob_size += 1
+            self.rs.roll(ord(c))
 
-itter = 0
-last = 0
-print spans
-while 1:
-    c = fh.read(1)
-    buf += c
-    n += 1
-    blob_size += 1
-    rs.roll(ord(c))
+            on_split = self.rs.on_split()
+            bits = 0
+            if self.blob_size == MAX_BLOB_SIZE:
+                bits = 20
+            # check EOF
+            elif on_split and self.n > FIRST_CHUNK_SIZE and \
+                    self.blob_size > TOO_SMALL_THRESHOLD:
+                bits = self.rs.bits()
+            # First chink => 262144 bytes
+            elif self.n == FIRST_CHUNK_SIZE:
+                bits = 18  # 1 << 18
+                log
+            else:
+                continue
 
-    on_split = rs.on_split()
-    bits = 0
-    if blob_size == MAX_BLOB_SIZE:
-        bits = 20
-    # check EOF
-    elif on_split and n > FIRST_CHUNK_SIZE and blob_size > TOO_SMALL_THRESHOLD:
-        bits = rs.bits()
-    elif n == FIRST_CHUNK_SIZE:
-        bits = 18
-    else:
-        continue
+            self.blob_size = 0
 
-    print "YAH"
-    blob_size = 0
+            # The tricky part, take spans from the end that have
+            # smaller bits score, slice them and make them children
+            # of the node, that's how we end up with mixed blobRef/bytesRef,
+            # And it keep them ordered by creating a kind of depth-first graph
+            children = []
+            children_from = len(self.spans)
 
-    children  = []
-    children_from = len(spans)
-    print "ACTUAL", itter
-    while children_from > 0 and spans[children_from - 1].bits < bits:
-        print "TRANSFERED", spans[children_from - 1].itter
-        children_from -= 1
+            while children_from > 0 and \
+                    self.spans[children_from - 1].bits < bits:
+                children_from -= 1
 
-    n_copy = len(spans) - children_from
-    if n_copy:
-        children = spans[children_from:]
-        spans = spans[:children_from]
-        print children
+            n_copy = len(self.spans) - children_from
+            if n_copy:
+                children = self.spans[children_from:]
+                self.spans = self.spans[:children_from]
 
-    spans.append(Span(last, n, bits, children, itter))
-    last = n
+            self.spans.append(Span(last, self.n, bits, children, chunk_cnt))
+            last = self.n
 
-    upload_last_span()
+            self.upload_last_span()
+            chunk_cnt += 1
+            if chunk_cnt > 15:
+                break
 
-    if itter > 15:
-        break
-    itter += 1
-    print itter
-
-print n, spans
+        return chunk_cnt
