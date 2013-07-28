@@ -1,19 +1,18 @@
 # -*- coding: utf-8 -*-
 import logging
-MAX_BLOB_SIZE = 1 << 20
-FIRST_CHUNK_SIZE = 256 << 10
-TOO_SMALL_THRESHOLD = 64 << 10
-# Buffer to detect EOF in advance.
-bufioReaderSize = 32 << 10
+import os
 
 from rollsum import Rollsum
 from schema import Bytes
 import camlipy
 
-log = logging.getLogger(__name__)
+MAX_BLOB_SIZE = 1 << 20
+FIRST_CHUNK_SIZE = 256 << 10
+TOO_SMALL_THRESHOLD = 64 << 10
+# Buffer to detect EOF in advance.
+BUFFER_SIZE = 32 << 10
 
-# TODO a buffer to detect EOF
-# TODO handle EOF
+log = logging.getLogger(__name__)
 
 
 class Span(object):
@@ -35,6 +34,7 @@ class Span(object):
         return not len(self.children)
 
     def size(self):
+        # TODO faire une vrai size
         size = self.to - self._from
         for cs in self.children:
             size += cs['size']
@@ -44,7 +44,8 @@ class Span(object):
 class FileWriter(object):
     def __init__(self, path):
         self.path = path
-        self.handler = open(self.path, 'rb')
+        self.reader = open(self.path, 'rb')
+        self.size = os.path.getsize(self.path)
         self.rs = Rollsum()
         self.blob_size = 0
         # Store Span the instance of the chunk
@@ -55,6 +56,7 @@ class FileWriter(object):
         self.buf = ''
 
     def upload_last_span(self):
+    	print "CHUNK"
         chunk = self.buf
         self.buf = ''
         blob_ref = 'sha1-{0}'.format(camlipy.compute_hash(chunk))
@@ -64,7 +66,7 @@ class FileWriter(object):
         chunk_cnt = 0
         last = 0
         while 1:
-            c = self.handler.read(1)
+            c = self.reader.read(1)
             self.buf += c
             self.n += 1
             self.blob_size += 1
@@ -75,6 +77,8 @@ class FileWriter(object):
             if self.blob_size == MAX_BLOB_SIZE:
                 bits = 20
             # check EOF
+            elif self.n + BUFFER_SIZE > self.size:
+                continue
             elif on_split and self.n > FIRST_CHUNK_SIZE and \
                     self.blob_size > TOO_SMALL_THRESHOLD:
                 bits = self.rs.bits()
@@ -108,7 +112,8 @@ class FileWriter(object):
 
             self.upload_last_span()
             chunk_cnt += 1
-            if chunk_cnt > 15:
-                break
 
         return chunk_cnt
+
+    def chunk_to_schema(self):
+        pass

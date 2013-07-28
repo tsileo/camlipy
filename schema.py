@@ -154,9 +154,9 @@ class StaticSet(Schema):
 
 
 class Bytes(Schema):
-    """ StaticSet schema. """
+    """ Bytes schema. """
     def __init__(self, con):
-        super(StaticSet, self).__init__(con)
+        super(Bytes, self).__init__(con)
         self.data.update({'camliType': 'bytes',
                           'parts': []})
 
