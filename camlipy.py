@@ -96,11 +96,11 @@ class Camlistore(object):
         # TODO handle already existing blobs
         r = requests.get(blobref_url, auth=self.auth)
         r.raise_for_status()
-        try:
-            res = r.json()
-        except json.JSONDecodeError:
-            res = r.content
-
+        #try:
+        #    res = r.json()
+        #except json.JSONDecodeError:
+        #    res = r.content
+        res = r.text
         return res
 
     def _stat(self, blobrefs=[]):
