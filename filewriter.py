@@ -37,7 +37,7 @@ class Span(object):
         # TODO faire une vrai size
         size = self.to - self._from
         for cs in self.children:
-            size += cs['size']
+            size += cs.size()
         return size
 
 
@@ -109,11 +109,22 @@ class FileWriter(object):
 
             self.spans.append(Span(last, self.n, bits, children, chunk_cnt))
             last = self.n
-
             self.upload_last_span()
             chunk_cnt += 1
+            if chunk_cnt == 30:
+                break
 
         return chunk_cnt
 
     def chunk_to_schema(self):
         pass
+
+
+def traverse_tree(spans):
+    for span in spans:
+        if span.single_blob():
+            yield span.chunk_cnt
+        else:
+            for sp in traverse_tree(span.children):
+                yield sp
+            yield span.chunk_cnt
