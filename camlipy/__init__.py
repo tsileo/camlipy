@@ -2,31 +2,14 @@
 import urlparse
 import logging
 import hashlib
-import uuid
-import os
-import stat
-import grp
-import pwd
-from datetime import datetime
+import re
 
 import requests
-import simplejson as json
 
 CAMLIVERSION = 1
 MAX_STAT_BLOB = 1000
 
 log = logging.getLogger(__name__)
-
-
-def get_stat_info(path):
-    file_stat = os.stat(path)
-    return {"unixOwnerId": file_stat.st_uid,
-            "unixGroupId": file_stat.st_gid,
-            "unixPermission": oct(stat.S_IMODE(file_stat.st_mode)),
-            "unixGroup": grp.getgrgid(file_stat.st_gid).gr_name,
-            "unixOwner": pwd.getpwuid(file_stat.st_uid).pw_name,
-            "unixMtime": datetime.utcfromtimestamp(file_stat.st_mtime).isoformat() + 'Z',
-            "unixCtime": datetime.utcfromtimestamp(file_stat.st_ctime).isoformat() + 'Z'}
 
 
 def compute_hash(data, blocksize=4096):
@@ -52,7 +35,12 @@ def compute_hash(data, blocksize=4096):
             else:
                 break
         data.seek(start)
-    return sha.hexdigest()
+    return 'sha1-{0}'.format(sha.hexdigest())
+
+
+def check_hash(_hash):
+    """ Check if the hash is valid. """
+    return bool(re.match(r'sha1-[a-fA-F0-9]{40}', _hash))
 
 
 class Camlistore(object):
@@ -83,8 +71,9 @@ class Camlistore(object):
         r.raise_for_status()
         return r.json()
 
-    def get_hash(self, blob):
-        return 'sha1-{0}'.format(compute_hash(blob))
+    @classmethod
+    def get_hash(cls, blob):
+        return compute_hash(blob)
 
     def get_blob(self, blobref):
         """ Retrieve blob content. """
@@ -94,14 +83,14 @@ class Camlistore(object):
 
         # TODO gerer le streaming
         # TODO handle already existing blobs
-        r = requests.get(blobref_url, auth=self.auth)
+        r = requests.get(blobref_url, auth=self.auth, stream=True)
+
+        if r.status_code == 404:
+            return
+        elif r.status_code == 200:
+            return r.text
+
         r.raise_for_status()
-        #try:
-        #    res = r.json()
-        #except json.JSONDecodeError:
-        #    res = r.content
-        res = r.text
-        return res
 
     def _stat(self, blobrefs=[]):
         """ Perform a multi-stat on blobs
@@ -144,6 +133,7 @@ class Camlistore(object):
                           auth=self.auth)
         r.raise_for_status()
 
+        # TODO return something better
         return r.json()
 
     def describe_blob(self, blobref):
@@ -155,4 +145,3 @@ class Camlistore(object):
         r.raise_for_status()
 
         return r.json()
-
