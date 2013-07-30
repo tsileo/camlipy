@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 import random
-from rolsum import Rollsum, WINDOW_SIZE
+from camlipy.rollsum import Rollsum, WINDOW_SIZE
 
 
 def test_rollsum():

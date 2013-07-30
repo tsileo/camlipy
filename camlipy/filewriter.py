@@ -2,9 +2,10 @@
 import logging
 import os
 
-from rollsum import Rollsum
-from schema import Bytes
 import camlipy
+from camlipy.rollsum import Rollsum
+from camlipy.schema import Bytes
+
 
 MAX_BLOB_SIZE = 1 << 20
 FIRST_CHUNK_SIZE = 256 << 10

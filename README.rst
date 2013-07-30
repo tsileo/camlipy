@@ -6,9 +6,16 @@ Unofficial Python client for `Camlistore <http://camlistore.org/>`_.
 
 This is a work in progress.
 
+Camlipy try to behave exactly the same way that the original Camlistore Go client.
+It means you can donwload file uploaded with ``camput`` or the web ui, and file uploaded with Camlipy works well with the ui and camget.
+
+
 TODO
 ====
 
+- Integration test
+- Better schema
+- Download big files uploaded with filewriter.
 - Handle symlink/hard link (inode)
 - Handle multi-claim in ``Claim``
 - Streaming in ``Camlistore.get_blob``
