@@ -191,6 +191,7 @@ class Camlistore(object):
                 batch_size = 0
 
             r_files[bref] = (bref, blob_content)
+            batch_size += blob_size
 
         if r_files.keys():
             if DEBUG:
