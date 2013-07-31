@@ -13,12 +13,10 @@ It means you can donwload file uploaded with ``camput`` or the web ui, and file 
 TODO
 ====
 
-- Integration test
-- Better schema
 - Download big files uploaded with filewriter.
 - Handle symlink/hard link (inode)
 - Handle multi-claim in ``Claim``
-- Streaming in ``Camlistore.get_blob``
+- Create a C extension for the rolling checksum part.
 
 License (MIT)
 =============

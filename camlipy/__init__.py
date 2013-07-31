@@ -134,39 +134,72 @@ class Camlistore(object):
         return r.json()
 
     def put_blobs(self, blobs):
-        """ Upload blobs using with standard multi-part upload. """
+        """ Upload blobs using with standard multi-part upload.
+        Returns a dict with received (blobref and size) and existing (blobref only)
+        """
         blobrefs = set([compute_hash(blob) for blob in blobs])
 
         stat_res = self._stat(blobrefs)
+        upload_url = stat_res['uploadUrl']
         max_upload_size = stat_res['maxUploadSize']
+
         blobrefs_stat = set([s['blobRef'] for s in stat_res['stat']])
 
         blobrefs_missing = blobrefs - blobrefs_stat
         blobrefs_existing = blobrefs - blobrefs_missing
 
-        if not blobrefs_missing:
-            return
+        res = {'existing': blobrefs_existing,
+               'received': []}
 
         # TODO handle max_upload_size
+        if DEBUG:
+            log.debug('Starting first upload batch')
+
         batch_size = 0
         r_files = {}
+
         for blob in blobs:
             bref = compute_hash(blob)
             if isinstance(blob, basestring):
                 blob_content = blob
-                batch_size += len(blob)
+                blob_size = len(blob)
             else:
                 blob_content = blob.read()
                 # Seek to the end of the file
                 blob.seek(0, 2)
-                batch_size += blob.tell()
+                blob_size = blob.tell()
+
+            # If max_upload_size will be exceeded with this blob,
+            # upload the current batch/buffer
+            if batch_size + blob_size > max_upload_size:
+                if DEBUG:
+                    log.debug('Upload first batch before continue, batch size:{0}'.format(batch_size))
+                batch_res = self._put_blobs(stat_res, r_files)
+                upload_url = batch_res['uploadUrl']
+
+                res['received'].extend(batch_res['received'])
+                r_files = {}
+                batch_size = 0
+
             r_files[bref] = (bref, blob_content)
 
-        if DEBUG:
-            log.debug('Current batch size: {0}'.format(batch_size))
-            log.debug('Uploading current batch')
+        if r_files.keys():
+            if DEBUG:
+                log.debug('Current batch size: {0}'.format(batch_size))
+                log.debug('Uploading current batch')
 
-        r = requests.post(stat_res['uploadUrl'],
+            batch_res = self._put_blobs(upload_url, r_files)
+
+            res['received'].extend(batch_res['received'])
+
+        return res
+
+    def _put_blobs(self, upload_url, r_files):
+        """ Perform the multi-part upload/
+        Batch uploader. """
+        if DEBUG:
+            log.debug('Starting multi-part upload')
+        r = requests.post(upload_url,
                           files=r_files,
                           auth=self.auth)
 
@@ -175,7 +208,6 @@ class Camlistore(object):
 
         r.raise_for_status()
 
-        # TODO return something better
         return r.json()
 
     def describe_blob(self, blobref):
