@@ -159,7 +159,6 @@ class Camlistore(object):
         res = {'existing': blobrefs_existing,
                'received': []}
 
-        # TODO handle max_upload_size
         if DEBUG:
             log.debug('Starting first upload batch')
 
@@ -184,6 +183,7 @@ class Camlistore(object):
                 if DEBUG:
                     log.debug('Upload first batch before continue, batch size:{0}'.format(batch_size))
                 batch_res = self._put_blobs(stat_res, r_files)
+                # Retrieve the next upload url
                 upload_url = batch_res['uploadUrl']
 
                 res['received'].extend(batch_res['received'])
@@ -195,7 +195,7 @@ class Camlistore(object):
         if r_files.keys():
             if DEBUG:
                 log.debug('Current batch size: {0}'.format(batch_size))
-                log.debug('Uploading current batch')
+                log.debug('Uploading last batch')
 
             batch_res = self._put_blobs(upload_url, r_files)
 

@@ -27,7 +27,6 @@ class TestSchema(CamliPyTestCase):
         return self.compute_hash(test_blob_str)
 
     def testPermanodeAndClaims(self):
-        self.maxDiff = None
         br = self._createBlob()
         permanode = Permanode(self.server)
         permanode_br = permanode.save(br)
@@ -57,6 +56,10 @@ class TestSchema(CamliPyTestCase):
         permanode_br = permanode.save(br)
 
         # TODO test del/add/set
+
+    def testStaticSet(self):
+        pass
+
 
 if __name__ == '__main__':
     unittest.main()

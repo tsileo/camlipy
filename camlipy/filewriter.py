@@ -28,8 +28,10 @@ class Span(object):
         self.chunk_cnt = chunk_cnt
 
     def __repr__(self):
-        return '<Span {0}children iter{1}>'.format(len(self.children),
-                                                   self.chunk_cnt)
+        return '<Span children:{0}, iter:{1}, {2}:{3} {4}bits>'.format(len(self.children),
+                                                                       self.chunk_cnt,
+                                                                       self._from, self.to,
+                                                                       self.bits)
 
     def single_blob(self):
         return not len(self.children)
@@ -57,13 +59,17 @@ class FileWriter(object):
         self.buf = ''
 
     def upload_last_span(self):
-    	print "CHUNK"
+        if camlipy.DEBUG:
+            log.debug('Uploading last span: {0}'.format(self.span[-1]))
+
         chunk = self.buf
         self.buf = ''
         blob_ref = 'sha1-{0}'.format(camlipy.compute_hash(chunk))
         self.spans[-1].br = blob_ref
 
     def chunk(self):
+        if camlipy.DEBUG:
+            log.debug('Start chunking')
         chunk_cnt = 0
         last = 0
         while 1:
@@ -108,17 +114,23 @@ class FileWriter(object):
                 children = self.spans[children_from:]
                 self.spans = self.spans[:children_from]
 
-            self.spans.append(Span(last, self.n, bits, children, chunk_cnt))
+            current_span = Span(last, self.n, bits, children, chunk_cnt)
+
+            if camlipy.DEBUG:
+                log.debug('Current span: {0}'.format(current_span))
+
+            self.spans.append(current_span)
             last = self.n
+
             self.upload_last_span()
+
             chunk_cnt += 1
-            if chunk_cnt == 30:
-                break
 
         return chunk_cnt
 
     def chunk_to_schema(self):
-        pass
+        if camlipy.DEBUG:
+            log.debug('Converting spans to Bytes Schema')
 
 
 def traverse_tree(spans):

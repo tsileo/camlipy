@@ -48,9 +48,6 @@ class TestCamliPy(CamliPyTestCase):
         fileobj.seek(0)
         self.assertEqual(fileobj.read(), blob_data)
 
-    def testGetBlobSchema(self):
-        pass
-
     def testStat(self):
         test_blob_str = os.urandom(4096)
         blob_br = self.compute_hash(test_blob_str)
