@@ -46,5 +46,14 @@ class CamliPyTestCase(unittest.TestCase):
     def testGetBlobSchema(self):
         pass
 
+    def testStat(self):
+        test_blob_str = os.urandom(4096)
+        blob_br = compute_hash(test_blob_str)
+        resp = self.server.put_blobs([test_blob_str])
+        self.assertEqual(blob_br, resp['received'][0]['blobRef'])
+
+        stat_resp = self.server._stat([blob_br])
+        self.assertEqual(stat_resp['stat'][0], {'blobRef': blob_br, 'size': 4096})
+
 if __name__ == '__main__':
     unittest.main()
