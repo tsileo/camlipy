@@ -102,15 +102,17 @@ class Camlistore(object):
             stat_data['blob{0}'.format(i + 1)] = blobref
 
         r = requests.post(stat_url, data=stat_data, auth=self.auth)
+        print r.text
         r.raise_for_status()
         return r.json()
 
     def put_blobs(self, blobs):
         """ Upload blobs using with standard multi-part upload. """
-        blobrefs = set(['sha1-{0}'.format(compute_hash(blob)) for blob in blobs])
+        blobrefs = set([compute_hash(blob) for blob in blobs])
 
         stat_res = self._stat(blobrefs)
-
+        max_upload_size = stat_res['maxUploadSize']
+        print "OK"
         blobrefs_stat = set([s['blobRef'] for s in stat_res['stat']])
 
         blobrefs_missing = blobrefs - blobrefs_stat
@@ -119,18 +121,26 @@ class Camlistore(object):
         if not blobrefs_missing:
             return
 
+        # TODO handle max_upload_size
+        batch_size = 0
         r_files = {}
         for blob in blobs:
-            bref = 'sha1-{0}'.format(compute_hash(blob))
+            bref = compute_hash(blob)
             if isinstance(blob, basestring):
                 blob_content = blob
+                batch_size += len(blob)
             else:
                 blob_content = blob.read()
+                # Seek to the end of the file
+                blob.seek(0, 2)
+                batch_size += blob.tell()
             r_files[bref] = (bref, blob_content)
 
+        print batch_size
         r = requests.post(stat_res['uploadUrl'],
                           files=r_files,
                           auth=self.auth)
+        print r.text
         r.raise_for_status()
 
         # TODO return something better

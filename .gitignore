@@ -1,3 +1,4 @@
+.fuse*
 *.pyc
 *wip.py
 *.json
