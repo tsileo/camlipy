@@ -3,6 +3,7 @@ import urlparse
 import logging
 import hashlib
 import re
+import tempfile
 
 import requests
 
@@ -77,20 +78,39 @@ class Camlistore(object):
         return compute_hash(blob)
 
     def get_blob(self, blobref):
-        """ Retrieve blob content. """
+        """
+        Retrieve blob content,
+        return a fileobj.
+        If the blob is a schema, it returns a dict.
+        """
         if DEBUG:
             log.debug('Fetching blobref:{0}'.format(blobref))
         blobref_url = urlparse.urljoin(self.url_blobRoot,
                                        'camli/{0}'.format(blobref))
 
-        # TODO gerer le streaming
-        # TODO handle already existing blobs
         r = requests.get(blobref_url, auth=self.auth, stream=True)
 
         if r.status_code == 404:
             return
         elif r.status_code == 200:
-            return r.text
+            # Store the blob in memory, and write it to disk if it exceed 1MB
+            out = tempfile.SpooledTemporaryFile(max_size=1024 << 10)
+
+            # Check if the blob contains binary data
+            if r.headers['content-type'] == 'application/octet-stream':
+                while 1:
+                    buf = r.raw.read(512 << 10)
+                    if buf:
+                        out.write(buf)
+                    else:
+                        break
+
+                out.seek(0)
+                return out
+            else:
+                # If the blob is not binary data,
+                # then, it's a schema, so we return a dict.
+                return r.json()
 
         r.raise_for_status()
 
