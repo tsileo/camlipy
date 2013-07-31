@@ -137,6 +137,10 @@ class Camlistore(object):
         """ Upload blobs using with standard multi-part upload.
         Returns a dict with received (blobref and size) and existing (blobref only)
         """
+        blobs2 = {}
+        for blob in blobs:
+            blobs2[compute_hash(blob)] = blob
+
         blobrefs = set([compute_hash(blob) for blob in blobs])
 
         stat_res = self._stat(blobrefs)
@@ -148,6 +152,10 @@ class Camlistore(object):
         blobrefs_missing = blobrefs - blobrefs_stat
         blobrefs_existing = blobrefs - blobrefs_missing
 
+        if DEBUG:
+            log.debug('blobs missing: {0}'.format(blobrefs_missing))
+            log.debug('blobs existing: {0}'.format(blobrefs_existing))
+
         res = {'existing': blobrefs_existing,
                'received': []}
 
@@ -158,7 +166,8 @@ class Camlistore(object):
         batch_size = 0
         r_files = {}
 
-        for blob in blobs:
+        for br in blobrefs_missing:
+            blob = blobs2[br]
             bref = compute_hash(blob)
             if isinstance(blob, basestring):
                 blob_content = blob

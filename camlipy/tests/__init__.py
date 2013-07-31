@@ -3,7 +3,7 @@ import unittest
 import os
 import logging
 
-logging.basicConfig(level=logging.DEBUG)
+logging.basicConfig(level=logging.ERROR)
 
 import camlipy
 from camlipy import Camlistore, compute_hash
