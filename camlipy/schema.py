@@ -6,10 +6,13 @@ import os
 import stat
 import grp
 import pwd
+import collections
 from datetime import datetime
 
 import requests
 import simplejson as json
+
+import camlipy
 
 CAMLIVERSION = 1
 MAX_STAT_BLOB = 1000
@@ -37,6 +40,8 @@ def get_stat_info(path):
 class Schema(object):
     """ Basic Schema base class.
 
+    Also used to load (and decoding?) existing schema.
+
     Args:
         con: Camlistore instance
         blob_ref: Optional blobRef if the blob already exists.
@@ -46,6 +51,10 @@ class Schema(object):
         self.con = con
         self.data = {'camliVersion': CAMLIVERSION}
         self.blob_ref = blob_ref
+
+        # If it's an existing schema then we load it
+        if blob_ref is not None:
+            self.data = self.con.get_blob(self.blob_ref)
 
     def _sign(self, data):
         """ Call the signature server to sign json. """
@@ -59,7 +68,10 @@ class Schema(object):
 
     def sign(self):
         """ Return signed json. """
-        return self._sign(self.data)
+        _return = self._sign(self.data)
+        if camlipy.DEBUG:
+            log.debug('Signature result: {0}'.format(_return))
+        return _return
 
     def json(self):
         """ Return json data. """
@@ -77,7 +89,7 @@ class Permanode(Schema):
         self.data.update({'random': str(uuid.uuid4()),
                           'camliType': 'permanode'})
 
-    def save(self, title=None, tags=[]):
+    def save(self, camli_content=None, title=None, tags=[]):
         """ Create the permanode, takes optional title and tags. """
         blob_ref = None
         res = self.con.put_blobs([self.sign()])
@@ -86,13 +98,25 @@ class Permanode(Schema):
 
         if blob_ref:
             self.blob_ref = blob_ref
-
+            if camli_content is not None:
+                self.set_camli_content(camli_content)
             if title is not None:
                 Claim(self.con, blob_ref).set_attribute('title', title)
             for tag in tags:
                 Claim(self.con, blob_ref).add_attribute('tag', tag)
 
         return blob_ref
+
+    def set_camli_content(self, camli_content):
+        """ Create a new camliContent claim. """
+        Claim(self.con, self.blob_ref).set_attribute('camliContent', camli_content)
+
+    def get_camli_content(self):
+        """ Fetch the current camliContent blobRef. """
+        for claim in self.claims():
+            if claim['type'] == 'set-attribute' and \
+                    claim['attr'] == 'camliContent':
+                return claim['value']
 
     def claims(self):
         """ Return claims for the current permanode. """
@@ -102,24 +126,40 @@ class Permanode(Schema):
         r = requests.get(claim_url, auth=self.con.auth)
         r.raise_for_status()
 
-        return r.json()
+        claims = []
+        for claim in r.json()['claims']:
+            claim['date'] = datetime.strptime(claim['date'], '%Y-%m-%dT%H:%M:%S.%fZ')
+            claims.append(claim)
+
+        return sorted(claims, key=lambda c: c['date'], reverse=True)
 
 
 class Claim(Schema):
     """ Claim schema with support for set/add/del attribute. """
-    def __init__(self, con, permanode_blobref):
-        super(Claim, self).__init__(con)
+    def __init__(self, con, permanode_blobref, claim_blobref=None):
+        super(Claim, self).__init__(con, claim_blobref)
+        self.permanode_blobref = permanode_blobref
         self.data.update({'claimDate': datetime.utcnow().isoformat() + 'Z',
                           'camliType': 'claim',
                           'permaNode': permanode_blobref})
 
     def set_attribute(self, attr, val):
+        if camlipy.DEBUG:
+            log.debug('Setting attribute {0}:{1} on permanode:{2}'.format(attr,
+                                                                          val,
+                                                                          self.permanode_blobref))
+
         self.data.update({'claimType': 'set-attribute',
                           'attribute': attr,
                           'value': val})
         return self.con.put_blobs([self.sign()])
 
     def del_attribute(self, attr, val=None):
+        if camlipy.DEBUG:
+            log.debug('Deleting attribute {0}:{1} on permanode:{2}'.format(attr,
+                                                                           val,
+                                                                           self.permanode_blobref))
+
         self.data.update({'claimType': 'del-attribute',
                           'attribute': attr})
         if val is not None:
@@ -127,6 +167,11 @@ class Claim(Schema):
         return self.con.put_blobs([self.sign()])
 
     def add_attribute(self, attr, val):
+        if camlipy.DEBUG:
+            log.debug('Adding attribute {0}:{1} on permanode:{2}'.format(attr,
+                                                                         val,
+                                                                         self.permanode_blobref))
+
         self.data.update({'claimType': 'add-attribute',
                           'attribute': attr,
                           'value': val})

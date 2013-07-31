@@ -9,7 +9,7 @@ from camlipy.tests import CamliPyTestCase
 logging.basicConfig(level=logging.DEBUG)
 
 
-class CamliPyTestCase(CamliPyTestCase):
+class TestCamliPy(CamliPyTestCase):
 
     def testPutBlobStr(self):
         test_blob_str = os.urandom(4096)
