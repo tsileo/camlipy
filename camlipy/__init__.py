@@ -8,6 +8,7 @@ import requests
 
 CAMLIVERSION = 1
 MAX_STAT_BLOB = 1000
+DEBUG = False
 
 log = logging.getLogger(__name__)
 
@@ -77,7 +78,8 @@ class Camlistore(object):
 
     def get_blob(self, blobref):
         """ Retrieve blob content. """
-        log.debug('Fetching blobref:{0}'.format(blobref))
+        if DEBUG:
+            log.debug('Fetching blobref:{0}'.format(blobref))
         blobref_url = urlparse.urljoin(self.url_blobRoot,
                                        'camli/{0}'.format(blobref))
 
@@ -95,6 +97,8 @@ class Camlistore(object):
     def _stat(self, blobrefs=[]):
         """ Perform a multi-stat on blobs
         to check if some are already present. """
+        if DEBUG:
+            log.debug('Perform stat')
         stat_url = urlparse.urljoin(self.url_blobRoot, 'camli/stat')
         stat_data = {'camliversion': CAMLIVERSION}
 
@@ -102,7 +106,10 @@ class Camlistore(object):
             stat_data['blob{0}'.format(i + 1)] = blobref
 
         r = requests.post(stat_url, data=stat_data, auth=self.auth)
-        print r.text
+
+        if DEBUG:
+            log.debug(r.text)
+
         r.raise_for_status()
         return r.json()
 
@@ -112,7 +119,6 @@ class Camlistore(object):
 
         stat_res = self._stat(blobrefs)
         max_upload_size = stat_res['maxUploadSize']
-        print "OK"
         blobrefs_stat = set([s['blobRef'] for s in stat_res['stat']])
 
         blobrefs_missing = blobrefs - blobrefs_stat
@@ -136,11 +142,17 @@ class Camlistore(object):
                 batch_size += blob.tell()
             r_files[bref] = (bref, blob_content)
 
-        print batch_size
+        if DEBUG:
+            log.debug('Current batch size: {0}'.format(batch_size))
+            log.debug('Uploading current batch')
+
         r = requests.post(stat_res['uploadUrl'],
                           files=r_files,
                           auth=self.auth)
-        print r.text
+
+        if DEBUG:
+            log.debug(r.text)
+
         r.raise_for_status()
 
         # TODO return something better
