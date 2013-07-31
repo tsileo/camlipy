@@ -56,6 +56,9 @@ class Schema(object):
         if blob_ref is not None:
             self.data = self.con.get_blob(self.blob_ref)
 
+            if camlipy.DEBUG:
+                log.debug('Loading existing schema: {0}'.format(self.data))
+
     def _sign(self, data):
         """ Call the signature server to sign json. """
         camli_signer = self.con.conf['signing']['publicKeyBlobRef']
@@ -86,8 +89,9 @@ class Permanode(Schema):
     """ Permanode Schema with helpers for claims. """
     def __init__(self, con, permanode_blob_ref=None):
         super(Permanode, self).__init__(con, permanode_blob_ref)
-        self.data.update({'random': str(uuid.uuid4()),
-                          'camliType': 'permanode'})
+        if permanode_blob_ref is None:
+            self.data.update({'random': str(uuid.uuid4()),
+                              'camliType': 'permanode'})
 
     def save(self, camli_content=None, title=None, tags=[]):
         """ Create the permanode, takes optional title and tags. """

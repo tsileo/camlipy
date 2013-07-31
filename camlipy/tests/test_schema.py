@@ -26,22 +26,37 @@ class TestSchema(CamliPyTestCase):
         self.server.put_blobs([test_blob_str])
         return self.compute_hash(test_blob_str)
 
-    def testPermanode(self):
+    def testPermanodeAndClaims(self):
+        self.maxDiff = None
         br = self._createBlob()
         permanode = Permanode(self.server)
         permanode_br = permanode.save(br)
 
+        # Create a permanode with a camliContent claims
         permanode_res = self.server.get_blob(permanode_br)
         self.assertTrue(isinstance(permanode_res, dict))
         claims = permanode.claims()
         self.assertEqual(len(claims), 1)
         self.assertEqual(permanode.get_camli_content(), br)
 
+        # Set a new camliContent claim
         br2 = self._createBlob()
         permanode.set_camli_content(br2)
         self.assertEqual(len(permanode.claims()), 2)
         self.assertEqual(permanode.get_camli_content(), br2)
 
+        # Test that we can load an existing permanode schema.
+        permanode2 = Permanode(self.server, permanode_br)
+        del permanode2.data['camliSig']
+
+        self.assertDictEqual(permanode2.data, permanode.data)
+
+    def testClaims(self):
+        br = self._createBlob()
+        permanode = Permanode(self.server)
+        permanode_br = permanode.save(br)
+
+        # TODO test del/add/set
 
 if __name__ == '__main__':
     unittest.main()
