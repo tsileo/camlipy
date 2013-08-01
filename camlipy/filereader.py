@@ -37,27 +37,6 @@ class FileReader(object):
                 raise Exception('Part lost: {0}'.format(part))
         return spans
 
-    def _load_spans_old(self, blob_ref):
-        spans = []
-        spans_set = set()
-        parts = Schema(self.con, blob_ref).data['parts']
-        for index, part in enumerate(parts):
-            if 'bytesRef' in part and index <= len(parts) and 'blobRef' in parts[index + 1]:
-                # If a the blob ref is followed by a bytesRef,
-                # it represents the same Span
-                children = self._load_spans(part['bytesRef'])
-                spans.append(Span(br=parts[index + 1]['blobRef'],
-                                      children=children))
-                spans_set.add(parts[index + 1]['blobRef'])
-                spans_set.add(part['bytesRef'])
-            elif 'blobRef' in part and not part['blobRef'] in spans_set:
-                # If the blobRef is alone, just append it
-                spans_set.add(part['blobRef'])
-                spans.append(Span(br=part['blobRef'], size=part['size']))
-            else:
-                raise Exception('Part lost: {0}'.format(part))
-        return spans
-
     def spans_to_br(self):
         return self._spans_to_br(self.spans)
 

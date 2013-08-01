@@ -32,16 +32,9 @@ class TestFileWriterAndFileReader(CamliPyTestCase):
 
         file_reader = FileReader(self.server, blob_ref)
         file_reader.load_spans()
-        spans2 = file_reader.spans
-
-        print file_writer.spans
-        print spans2
 
         out = file_reader.build()
         out_hash = self.compute_hash(out)
-        test_blob.seek(0)
-        out.seek(0)
-        print len(test_blob.read()), len(out.read())
         self.assertEqual(out_hash, blob_hash)
 
 if __name__ == '__main__':
