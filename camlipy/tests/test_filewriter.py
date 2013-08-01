@@ -17,29 +17,32 @@ class TestFileWriterAndFileReader(CamliPyTestCase):
     def testBigFile(self):
         # Create a 1MB random file
         test_blob = tempfile.TemporaryFile()
-        test_blob.write(os.urandom(5 * (1024 << 10)))
+        test_blob.write(os.urandom(2 * (1024 << 10)))
 
         log.debug('Ramdom file generated')
+        test_blob.seek(0)
+        blob_hash = self.compute_hash(test_blob)
         test_blob.seek(0)
         file_writer = FileWriter(self.server, fileobj=test_blob)
         file_writer.chunk()
 
-        self.assertEqual(list(file_writer.check_spans())[:8], range(8))
+        self.assertEqual(list(file_writer.check_spans())[:len(file_writer.spans) - 2], range(len(file_writer.spans) - 2))
 
         blob_ref = file_writer.bytes_writer()
 
         file_reader = FileReader(self.server, blob_ref)
-        spans2 = file_reader.load_spans()
+        file_reader.load_spans()
+        spans2 = file_reader.spans
 
         print file_writer.spans
         print spans2
 
-        self.assertEqual(len(file_writer.spans), len(spans2))
-
-        for index, span in enumerate(file_writer.spans):
-            self.assertEqual(len(span.children), len(spans2[index].children))
-            self.assertEqual(span.br, spans2[index].br)
-
+        out = file_reader.build()
+        out_hash = self.compute_hash(out)
+        test_blob.seek(0)
+        out.seek(0)
+        print len(test_blob.read()), len(out.read())
+        self.assertEqual(out_hash, blob_hash)
 
 if __name__ == '__main__':
     unittest.main()

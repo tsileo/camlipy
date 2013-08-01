@@ -97,9 +97,10 @@ class FileWriter(object):
 
     def chunk(self):
         if camlipy.DEBUG:
-            log.debug('Start chunking')
+            log.debug('Start chunking, total size: {0}'.format(self.size))
         chunk_cnt = 0
         last = 0
+        eof = False
         while 1:
             c = self.reader.read(1)
             if c:
@@ -108,19 +109,19 @@ class FileWriter(object):
                 self.blob_size += 1
                 self.rs.roll(ord(c))
                 on_split = self.rs.on_split()
+                
                 bits = 0
                 if self.blob_size == MAX_BLOB_SIZE:
                     bits = 20
                 # check EOF
-                elif self.n + BUFFER_SIZE > self.size:
+                elif self.n > self.size - BUFFER_SIZE:
                     continue
-                elif on_split and self.n > FIRST_CHUNK_SIZE and \
-                        self.blob_size > TOO_SMALL_THRESHOLD:
+                elif (on_split and self.n > FIRST_CHUNK_SIZE and
+                        self.blob_size > TOO_SMALL_THRESHOLD):
                     bits = self.rs.bits()
                 # First chink => 262144 bytes
                 elif self.n == FIRST_CHUNK_SIZE:
                     bits = 18  # 1 << 18
-                    log
                 else:
                     continue
 
@@ -129,7 +130,7 @@ class FileWriter(object):
                 # The tricky part, take spans from the end that have
                 # smaller bits score, slice them and make them children
                 # of the node, that's how we end up with mixed blobRef/bytesRef,
-                # And it keep them ordered by creating a kind of depth-first graph
+                # And it keep them ordered by  creating a kind of depth-first graph
                 children = []
                 children_from = len(self.spans)
 
@@ -141,23 +142,26 @@ class FileWriter(object):
                 if n_copy:
                     children = self.spans[children_from:]
                     self.spans = self.spans[:children_from]
-
-                current_span = Span(last, self.n, bits, children, chunk_cnt)
-
-                if camlipy.DEBUG:
-                    log.debug('Current span: {0}'.format(current_span))
-
-                self.spans.append(current_span)
-                last = self.n
-
-                self.upload_last_span()
-
-                chunk_cnt += 1
             else:
-                # EOF
+                eof = True
+
+            current_span = Span(last, self.n, bits, children, chunk_cnt)
+
+            if camlipy.DEBUG:
+                log.debug('Current span: {0}, last:{1}, n:{2}'.format(current_span, last, self.n))
+
+            self.spans.append(current_span)
+            last = self.n
+            self.upload_last_span()
+
+            chunk_cnt += 1
+
+            if eof:
+                log.debug('EOF')
                 break
 
         # Upload left chunks
+        assert self.n == self.size
         self._upload_spans(force=True)
         return chunk_cnt
 
@@ -188,7 +192,7 @@ class FileWriter(object):
                     log.debug('Transform this span to blobRef, new span: {0}'.format(span))
 
             # Create a new bytesRef if the span has children
-            if len(span.children):
+            elif len(span.children):
                 children_size = 0
                 for c in span.children:
                     children_size += c.size()
