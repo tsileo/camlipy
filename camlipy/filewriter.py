@@ -45,10 +45,18 @@ class Span(object):
 
 
 class FileWriter(object):
-    def __init__(self, path):
+    def __init__(self, con, path=None, fileobj=None):
+        self.con = con
         self.path = path
-        self.reader = open(self.path, 'rb')
-        self.size = os.path.getsize(self.path)
+        if path:
+            self.reader = open(self.path, 'rb')
+            self.size = os.path.getsize(self.path)
+        else:
+            self.reader = fileobj
+            fileobj.seek(0, 2)
+            self.size = fileobj.tell()
+            fileobj.seek(0)
+
         self.rs = Rollsum()
         self.blob_size = 0
         # Store Span the instance of the chunk
@@ -57,15 +65,32 @@ class FileWriter(object):
         self.n = 0
         # buffer to store the chunk
         self.buf = ''
+        self.buf_spans = {}
+
+    def _upload_spans(self, force=False):
+        if len(self.buf_spans) == 10 or force:
+            if camlipy.DEBUG:
+                log.debug('Upload spans')
+            resp = self.con.put_blobs(self.buf_spans.values())
+            
+            #for rec in resp['received']:
+            #    del self.buf_spans[rec['blobRef']]
+            #for br in resp['existing']:
+            #    del self.buf_spans[br]
+
+            #if len(self.buf_spans):
+            #    log.error('Some chunks failed, will retry next upload: {0}'.format(self.buf_spans))
 
     def upload_last_span(self):
         if camlipy.DEBUG:
-            log.debug('Uploading last span: {0}'.format(self.span[-1]))
+            log.debug('Add span to buffer: {0}'.format(self.spans[-1]))
 
         chunk = self.buf
         self.buf = ''
         blob_ref = 'sha1-{0}'.format(camlipy.compute_hash(chunk))
         self.spans[-1].br = blob_ref
+        self.buf_spans[blob_ref] = chunk
+        self._upload_spans()
 
     def chunk(self):
         if camlipy.DEBUG:
@@ -74,70 +99,101 @@ class FileWriter(object):
         last = 0
         while 1:
             c = self.reader.read(1)
-            self.buf += c
-            self.n += 1
-            self.blob_size += 1
-            self.rs.roll(ord(c))
+            if c:
+                self.buf += c
+                self.n += 1
+                self.blob_size += 1
+                self.rs.roll(ord(c))
+                on_split = self.rs.on_split()
+                bits = 0
+                if self.blob_size == MAX_BLOB_SIZE:
+                    bits = 20
+                # check EOF
+                elif self.n + BUFFER_SIZE > self.size:
+                    continue
+                elif on_split and self.n > FIRST_CHUNK_SIZE and \
+                        self.blob_size > TOO_SMALL_THRESHOLD:
+                    bits = self.rs.bits()
+                # First chink => 262144 bytes
+                elif self.n == FIRST_CHUNK_SIZE:
+                    bits = 18  # 1 << 18
+                    log
+                else:
+                    continue
 
-            on_split = self.rs.on_split()
-            bits = 0
-            if self.blob_size == MAX_BLOB_SIZE:
-                bits = 20
-            # check EOF
-            elif self.n + BUFFER_SIZE > self.size:
-                continue
-            elif on_split and self.n > FIRST_CHUNK_SIZE and \
-                    self.blob_size > TOO_SMALL_THRESHOLD:
-                bits = self.rs.bits()
-            # First chink => 262144 bytes
-            elif self.n == FIRST_CHUNK_SIZE:
-                bits = 18  # 1 << 18
-                log
+                self.blob_size = 0
+
+                # The tricky part, take spans from the end that have
+                # smaller bits score, slice them and make them children
+                # of the node, that's how we end up with mixed blobRef/bytesRef,
+                # And it keep them ordered by creating a kind of depth-first graph
+                children = []
+                children_from = len(self.spans)
+
+                while children_from > 0 and \
+                        self.spans[children_from - 1].bits < bits:
+                    children_from -= 1
+
+                n_copy = len(self.spans) - children_from
+                if n_copy:
+                    children = self.spans[children_from:]
+                    self.spans = self.spans[:children_from]
+
+                current_span = Span(last, self.n, bits, children, chunk_cnt)
+
+                if camlipy.DEBUG:
+                    log.debug('Current span: {0}'.format(current_span))
+
+                self.spans.append(current_span)
+                last = self.n
+
+                self.upload_last_span()
+
+                chunk_cnt += 1
             else:
-                continue
+                # EOF
+                break
 
-            self.blob_size = 0
-
-            # The tricky part, take spans from the end that have
-            # smaller bits score, slice them and make them children
-            # of the node, that's how we end up with mixed blobRef/bytesRef,
-            # And it keep them ordered by creating a kind of depth-first graph
-            children = []
-            children_from = len(self.spans)
-
-            while children_from > 0 and \
-                    self.spans[children_from - 1].bits < bits:
-                children_from -= 1
-
-            n_copy = len(self.spans) - children_from
-            if n_copy:
-                children = self.spans[children_from:]
-                self.spans = self.spans[:children_from]
-
-            current_span = Span(last, self.n, bits, children, chunk_cnt)
-
-            if camlipy.DEBUG:
-                log.debug('Current span: {0}'.format(current_span))
-
-            self.spans.append(current_span)
-            last = self.n
-
-            self.upload_last_span()
-
-            chunk_cnt += 1
-
+        # Upload left chunks
+        self._upload_spans(force=True)
         return chunk_cnt
 
     def chunk_to_schema(self):
         if camlipy.DEBUG:
             log.debug('Converting spans to Bytes Schema')
 
+    def bytes_writer(self):
+        """ bytesRef before the blobRef. """
+        root = Bytes(self.con)
+        for span in self.spans:
+            # Don't create a bytesRef fi there is only one child,
+            # make it a blobRef instead.
+            if len(span.children) == 1 and span.children[0].single_blob():
+                children_size = int(span.children[0].to - span.children[0]._from)
+                root.add_blob_ref(span.children[0].br,
+                                  children_size)
+                span.children = []
+            # Create a new bytesRef
+            if len(span.children):
+                children_size = 0
+                for c in span.children:
+                    children_size += c.size()
+                root.add_bytes_ref(self.bytes_writer(span.children), children_size)
+            # Make a blobRef with the span data.
+            root.add_blob_ref(span.br, int(span.to - span._from))
+        return 'sha1-{0}'.format(camlipy.compute_hash(root.json()))
 
-def traverse_tree(spans):
-    for span in spans:
-        if span.single_blob():
-            yield span.chunk_cnt
-        else:
-            for sp in traverse_tree(span.children):
-                yield sp
-            yield span.chunk_cnt
+    def check_spans(self):
+        """ Debug methods. """
+        log.debug(self.spans)
+        return self._check_spans(self.spans)
+
+    def _check_spans(self, spans):
+        """ Debug methods. """
+        for span in spans:
+            if span.single_blob():
+                yield span.chunk_cnt
+            else:
+                for sp in self._check_spans(span.children):
+                    yield sp
+                yield span.chunk_cnt
