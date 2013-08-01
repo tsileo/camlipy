@@ -47,7 +47,6 @@ class TestFileWriterAndFileReader(CamliPyTestCase):
         # Try to re-upload the same file and check that no data is re-uploaded
         file_writer2 = FileWriter(self.server, fileobj=test_blob)
         file_writer2.chunk()
-        blob_ref2 = file_writer2.bytes_writer()
 
         log.info('FileWriter2 cnt={0}'.format(file_writer2.cnt))
 
