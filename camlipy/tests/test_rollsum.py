@@ -1,4 +1,7 @@
 # -*- coding: utf-8 -*-
+
+__author__ = 'Thomas Sileo (thomas@trucsdedev.com)'
+
 import random
 from camlipy.rollsum import Rollsum, WINDOW_SIZE
 

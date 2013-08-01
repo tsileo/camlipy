@@ -1,4 +1,7 @@
 # -*- encoding: utf-8 -*-
+
+__author__ = 'Thomas Sileo (thomas@trucsdedev.com)'
+
 import unittest
 import os
 import logging

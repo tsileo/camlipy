@@ -1,4 +1,8 @@
 # -*- coding: utf-8 -*-
+""" Helper for creating/loading schemas. """
+
+__author__ = 'Thomas Sileo (thomas@trucsdedev.com)'
+
 import urlparse
 import logging
 import uuid
@@ -6,7 +10,6 @@ import os
 import stat
 import grp
 import pwd
-import collections
 from datetime import datetime
 
 import requests

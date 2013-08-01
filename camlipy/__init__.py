@@ -1,4 +1,10 @@
 # -*- coding: utf-8 -*-
+
+""" Camlistore client. """
+
+__author__ = 'Thomas Sileo (thomas@trucsdedev.com)'
+__version__ = '0.1.0'
+
 import urlparse
 import logging
 import hashlib
@@ -6,6 +12,8 @@ import re
 import tempfile
 
 import requests
+
+__all__ = ['compute_hash', 'check_hash', 'Camlistore']
 
 CAMLIVERSION = 1
 MAX_STAT_BLOB = 1000

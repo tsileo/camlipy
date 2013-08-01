@@ -1,4 +1,9 @@
 # -*- coding: utf-8 -*-
+
+""" Read the file schema, and output chunk in a temp file. """
+
+__author__ = 'Thomas Sileo (thomas@trucsdedev.com)'
+
 import logging
 import tempfile
 

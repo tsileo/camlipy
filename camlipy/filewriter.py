@@ -1,4 +1,11 @@
 # -*- coding: utf-8 -*-
+
+__author__ = 'Thomas Sileo (thomas@trucsdedev.com)'
+
+""" Helper for uploading file, takes care of chunking file, create the file schema. """
+
+__author__ = 'Thomas Sileo (thomas@trucsdedev.com)'
+
 import logging
 import os
 

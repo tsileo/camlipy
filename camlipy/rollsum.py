@@ -3,6 +3,8 @@
     https://github.com/bradfitz/camlistore/blob/master/pkg/rollsum/rollsum.go
 """
 
+__author__ = 'Thomas Sileo (thomas@trucsdedev.com)'
+
 WINDOW_SIZE = 64
 CHAR_OFFSET = 31
 
