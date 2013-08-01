@@ -182,7 +182,7 @@ class Camlistore(object):
             if batch_size + blob_size > max_upload_size:
                 if DEBUG:
                     log.debug('Upload first batch before continue, batch size:{0}'.format(batch_size))
-                batch_res = self._put_blobs(stat_res, r_files)
+                batch_res = self._put_blobs(upload_url, r_files)
                 # Retrieve the next upload url
                 upload_url = batch_res['uploadUrl']
 

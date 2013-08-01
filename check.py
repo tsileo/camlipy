@@ -20,8 +20,8 @@ def span2(spans, _root=True):
     """ bytesRef before the blobRef. """
     root = Bytes(con)
     for span in spans:
-    	# Don't create a bytesRef fi there is only one child,
-    	# make it a blobRef instead.
+        # Don't create a bytesRef fi there is only one child,
+        # make it a blobRef instead.
         if len(span.children) == 1 and span.children[0].single_blob():
             children_size = int(span.children[0].to - span.children[0]._from)
             root.add_blob_ref(span.children[0].br,

@@ -36,6 +36,15 @@ class TestCamliPy(CamliPyTestCase):
         test_blob_file.seek(0)
         self.assertEqual(resp['received'], [{'blobRef': self.compute_hash(test_blob_file.read()), 'size': 4096}])
 
+    def testPutBlobsBiggerThanMaxUpload(self):
+        max_upload_size = self.server._stat()['maxUploadSize']
+        nb_blobs = 10000
+        blob_size = int((max_upload_size / 1000) * 1.5 / nb_blobs)
+        test_blobs = [os.urandom(blob_size) * 1000 for i in xrange(blob_size)]
+        test_blobs_br = set([self.compute_hash(b) for b in test_blobs])
+        resp = self.server.put_blobs(test_blobs)
+        self.assertEqual(test_blobs_br, set([r['blobRef'] for r in resp['received']]))
+
     def testGetBlob(self):
         data_len = (1024 << 10) + (4 << 10)
         blob_data = os.urandom(data_len)
