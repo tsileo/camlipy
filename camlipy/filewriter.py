@@ -19,13 +19,14 @@ log = logging.getLogger(__name__)
 class Span(object):
     """ Chunk metadata, used to create the tree,
     and compute chunk/bytesRef size. """
-    def __init__(self, _from, to, bits=None, children=None, chunk_cnt=0):
+    def __init__(self, _from=0, to=0, bits=None, children=[], chunk_cnt=0, br=None, size=None):
         self._from = _from
         self.to = to
         self.bits = bits
-        self.br = None
+        self.br = br
         self.children = children
         self.chunk_cnt = chunk_cnt
+        self._size = size
 
     def __repr__(self):
         return '<Span children:{0}, iter:{1}, {2}:{3} {4}bits>'.format(len(self.children),
@@ -37,7 +38,8 @@ class Span(object):
         return not len(self.children)
 
     def size(self):
-        # TODO faire une vrai size
+        if self._size:
+            return self.size
         size = self.to - self._from
         for cs in self.children:
             size += cs.size()
@@ -72,7 +74,8 @@ class FileWriter(object):
             if camlipy.DEBUG:
                 log.debug('Upload spans')
             resp = self.con.put_blobs(self.buf_spans.values())
-            
+            self.buf_spans = {}
+
             #for rec in resp['received']:
             #    del self.buf_spans[rec['blobRef']]
             #for br in resp['existing']:
@@ -87,7 +90,7 @@ class FileWriter(object):
 
         chunk = self.buf
         self.buf = ''
-        blob_ref = 'sha1-{0}'.format(camlipy.compute_hash(chunk))
+        blob_ref = camlipy.compute_hash(chunk)
         self.spans[-1].br = blob_ref
         self.buf_spans[blob_ref] = chunk
         self._upload_spans()
@@ -163,25 +166,46 @@ class FileWriter(object):
             log.debug('Converting spans to Bytes Schema')
 
     def bytes_writer(self):
-        """ bytesRef before the blobRef. """
-        root = Bytes(self.con)
-        for span in self.spans:
-            # Don't create a bytesRef fi there is only one child,
+        return self._bytes_writer(self.spans)
+
+    def _bytes_writer(self, spans):
+        schema = Bytes(self.con)
+        if camlipy.DEBUG:
+            log.debug('Starting spans: {0}'.format(spans))
+
+        for span in spans:
+            if camlipy.DEBUG:
+                log.debug('Current span: {0}'.format(span))
+
+            # Don't create a bytesRef if there is only one child,
             # make it a blobRef instead.
             if len(span.children) == 1 and span.children[0].single_blob():
-                children_size = int(span.children[0].to - span.children[0]._from)
-                root.add_blob_ref(span.children[0].br,
-                                  children_size)
+                children_size = span.children[0].to - span.children[0]._from
+                schema.add_blob_ref(span.children[0].br, children_size)
                 span.children = []
-            # Create a new bytesRef
+
+                if camlipy.DEBUG:
+                    log.debug('Transform this span to blobRef, new span: {0}'.format(span))
+
+            # Create a new bytesRef if the span has children
             if len(span.children):
                 children_size = 0
                 for c in span.children:
                     children_size += c.size()
-                root.add_bytes_ref(self.bytes_writer(span.children), children_size)
-            # Make a blobRef with the span data.
-            root.add_blob_ref(span.br, int(span.to - span._from))
-        return 'sha1-{0}'.format(camlipy.compute_hash(root.json()))
+
+                if camlipy.DEBUG:
+                    log.debug('Embedding a bytesRef')
+                schema.add_bytes_ref(self._bytes_writer(span.children), children_size)
+
+            # Make a blobRef with the span data
+            schema.add_blob_ref(span.br, span.to - span._from)
+
+        if camlipy.DEBUG:
+            log.debug('Resulting Bytes schema: {0}'.format(schema.json()))
+
+        self.con.put_blobs([schema.json()])
+
+        return camlipy.compute_hash(schema.json())
 
     def check_spans(self):
         """ Debug methods. """
