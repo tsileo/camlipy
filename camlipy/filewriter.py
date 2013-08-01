@@ -69,20 +69,22 @@ class FileWriter(object):
         self.buf = ''
         self.buf_spans = {}
 
+        # To generate the end report.
+        self.cnt = {'existing': 0,
+                    'uploaded': 0,
+                    'size': 0}
+
     def _upload_spans(self, force=False):
         if len(self.buf_spans) == 10 or force:
             if camlipy.DEBUG:
                 log.debug('Upload spans')
             resp = self.con.put_blobs(self.buf_spans.values())
             self.buf_spans = {}
-
-            #for rec in resp['received']:
-            #    del self.buf_spans[rec['blobRef']]
-            #for br in resp['existing']:
-            #    del self.buf_spans[br]
-
-            #if len(self.buf_spans):
-            #    log.error('Some chunks failed, will retry next upload: {0}'.format(self.buf_spans))
+            for rec in resp['received']:
+                self.cnt['uploaded'] += 1
+                self.cnt['size'] += rec['size']
+            for br in resp['existing']:
+                self.cnt['existing'] += 1
 
     def upload_last_span(self):
         if camlipy.DEBUG:
@@ -109,7 +111,7 @@ class FileWriter(object):
                 self.blob_size += 1
                 self.rs.roll(ord(c))
                 on_split = self.rs.on_split()
-                
+
                 bits = 0
                 if self.blob_size == MAX_BLOB_SIZE:
                     bits = 20

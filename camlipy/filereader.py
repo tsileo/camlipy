@@ -54,6 +54,14 @@ class FileReader(object):
         out = tempfile.TemporaryFile()
         for br in self.spans_to_br():
             blob = self.con.get_blob(br)
+            out.write(blob.read())
+        out.seek(0)
+        return out
+
+    def build_old(self):
+        out = tempfile.TemporaryFile()
+        for br in self.spans_to_br():
+            blob = self.con.get_blob(br)
             while 1:
                 buf = blob.read(4096)
                 if buf:
