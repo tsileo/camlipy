@@ -116,6 +116,7 @@ class FileWriter(object):
         chunk_cnt = 0
         last = 0
         eof = False
+        bits = 0
         while 1:
             c = self.reader.read(1)
             if c:

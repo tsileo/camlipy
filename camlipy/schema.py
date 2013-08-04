@@ -102,6 +102,8 @@ class Permanode(Schema):
         res = self.con.put_blobs([self.sign()])
         if len(res['received']) == 1:
             blob_ref = res['received'][0]['blobRef']
+        elif len(res['skipped']) == 1:
+            blob_ref = res['skipped'][0]['blobRef']
 
         if blob_ref:
             self.blob_ref = blob_ref
@@ -199,9 +201,11 @@ class StaticSet(Schema):
         res = self.con.put_blobs([self.json()])
         if len(res['received']) == 1:
             blob_ref = res['received'][0]['blobRef']
+        elif len(res['skipped']) == 1:
+            blob_ref = res['skipped'][0]['blobRef']
 
-            if blob_ref:
-                self.blob_ref = blob_ref
+        if blob_ref:
+            self.blob_ref = blob_ref
 
         return self.blob_ref
 
@@ -218,9 +222,11 @@ class Bytes(Schema):
         res = self.con.put_blobs([self.json()])
         if len(res['received']) == 1:
             blob_ref = res['received'][0]['blobRef']
+        elif len(res['skipped']) == 1:
+            blob_ref = res['skipped'][0]['blobRef']
 
-            if blob_ref:
-                self.blob_ref = blob_ref
+        if blob_ref:
+            self.blob_ref = blob_ref
 
         return self.blob_ref
 
@@ -261,8 +267,8 @@ class File(FileCommon):
 
         if len(res['received']) == 1:
             blob_ref = res['received'][0]['blobRef']
-        else:
-            blob_ref = self.con.get_hash(self.json())
+        elif len(res['skipped']) == 1:
+            blob_ref = res['skipped'][0]['blobRef']
 
         self.blob_ref = blob_ref
         if permanode:
@@ -282,25 +288,19 @@ class Directory(FileCommon):
             dir_name = os.path.basename(os.path.normpath(path))
             self.data.update({'fileName': dir_name})
 
-    def _save(self, static_set_blobref, permanode=False):
+    def save(self, static_set_blobref, permanode=False):
         self.data.update({'entries': static_set_blobref})
-
         res = self.con.put_blobs([self.json()])
 
         if len(res['received']) == 1:
             blob_ref = res['received'][0]['blobRef']
+        elif len(res['skipped']) == 1:
+            blob_ref = res['skipped'][0]['blobRef']
 
-            if blob_ref:
-                self.blob_ref = blob_ref
-
-                if permanode:
-                    permanode = Permanode(self.con).save(camli_content=self.blob_ref,
-                                                         title=self.data['fileName'])
-                    return permanode
-
+        if blob_ref:
+            self.blob_ref = blob_ref
+            if permanode:
+                permanode = Permanode(self.con).save(camli_content=self.blob_ref,
+                                                     title=self.data['fileName'])
+                return permanode
         return self.blob_ref
-
-    def save(self, files, permanode=False):
-        files_blobrefs = [File(self.con, f).save() for f in files]
-        static_set_blobref = StaticSet(self.con).save(files_blobrefs)
-        return self._save(static_set_blobref, permanode)
