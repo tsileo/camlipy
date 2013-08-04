@@ -7,7 +7,7 @@ __author__ = 'Thomas Sileo (thomas@trucsdedev.com)'
 import logging
 import tempfile
 
-from camlipy.schema import Schema
+from camlipy.schema import Schema, apply_stat_info
 from camlipy.filewriter import Span
 
 log = logging.getLogger(__name__)
@@ -18,13 +18,14 @@ class FileReader(object):
         self.con = con
         self.blob_ref = blob_ref
         self.spans = None
+        self.schema = Schema(self.con, blob_ref)
 
     def load_spans(self):
         self.spans = self._load_spans(self.blob_ref)
 
     def _load_spans(self, blob_ref):
         spans = []
-        parts = Schema(self.con, blob_ref).data['parts']
+        parts = self.schema.data['parts']
         for index, part in enumerate(parts):
             if 'bytesRef' in part:
                 # The associated blobRef => the span
@@ -62,6 +63,8 @@ class FileReader(object):
             blob = self.con.get_blob(br)
             fileobj.write(blob.read())
         fileobj.seek(0)
+        if hasattr(fileobj, 'name'):
+            apply_stat_info(fileobj.name, self.schema.data)
         return fileobj
 
 

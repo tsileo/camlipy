@@ -28,6 +28,15 @@ def ts_to_camli_iso(ts):
     return datetime.utcfromtimestamp(ts).isoformat() + 'Z'
 
 
+def camli_iso_to_ts(iso):
+    try:
+        dt = datetime.strptime(iso, '%Y-%m-%dT%H:%M:%S.%fZ')
+    except:
+        dt = datetime.strptime(iso, '%Y-%m-%dT%H:%M:%SZ')
+
+    return int(dt.strftime('%s'))
+
+
 def get_stat_info(path):
     """ Return OS stat info for the given path. """
     file_stat = os.stat(path)
@@ -38,6 +47,23 @@ def get_stat_info(path):
             "unixOwner": pwd.getpwuid(file_stat.st_uid).pw_name,
             "unixMtime": ts_to_camli_iso(file_stat.st_mtime),
             "unixCtime": ts_to_camli_iso(file_stat.st_ctime)}
+
+
+def apply_stat_info(path, data):
+    if 'unixMtime' in data:
+        mtime_ts = camli_iso_to_ts(data['unixMtime'])
+        os.utime(path, (mtime_ts, mtime_ts))
+    if 'unixPermission' in data:
+        os.chmod(path, int(data['unixPermission'], 8))
+    if 'unixOwner' in data and 'unixOwnerId' in data and \
+            'unixGroup' in data and 'unixGroupId' in data:
+        unix_owner = -1
+        if data['unixOwner'] == pwd.getpwuid(data['unixOwnerId']).pw_name:
+            unix_owner = data['unixOwnerId']
+        unix_group = -1
+        if data['unixGroup'] == grp.getgrgid(data['unixGroupId']).gr_name:
+            unix_group = data['unixGroupId']
+        os.chown(path, unix_owner, unix_group)
 
 
 class Schema(object):

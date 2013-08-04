@@ -24,7 +24,7 @@ class DirWriter(object):
         return self._put_dir(self.path)
 
     def _put_dir(self, path):
-        directory = Directory(self.con, self.path)
+        directory = Directory(self.con, path)
         static_set = StaticSet(self.con)
         members = []
         # Don't walk recursively with walk, since we already
