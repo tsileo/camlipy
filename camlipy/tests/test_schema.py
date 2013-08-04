@@ -9,7 +9,7 @@ import os
 import simplejson as json
 
 from camlipy.tests import CamliPyTestCase
-from camlipy.schema import Schema, Permanode
+from camlipy.schema import Schema, Permanode, StaticSet
 import camlipy
 
 logging.basicConfig(level=logging.DEBUG)
@@ -58,10 +58,22 @@ class TestSchema(CamliPyTestCase):
         permanode = Permanode(self.server)
         permanode_br = permanode.save(br)
 
+        d = self.server.describe_blob(permanode_br)
+        self.assertEqual(d['camliType'], 'permanode')
+
         # TODO test del/add/set
 
     def testStaticSet(self):
-        pass
+        brs = [self._createBlob() for i in range(5)]
+        static_set = StaticSet(self.server)
+        br = static_set.save(brs)
+
+        d = self.server.describe_blob(br)
+        self.assertEqual(d['camliType'], 'static-set')
+
+        static_set2 = StaticSet(self.server, br)
+        self.assertEqual(sorted(static_set2.data['members']),
+                         sorted(brs))
 
 
 if __name__ == '__main__':

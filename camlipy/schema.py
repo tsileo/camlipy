@@ -187,10 +187,11 @@ class Claim(Schema):
 
 class StaticSet(Schema):
     """ StaticSet schema. """
-    def __init__(self, con):
-        super(StaticSet, self).__init__(con)
-        self.data.update({'camliType': 'static-set',
-                          'members': []})
+    def __init__(self, con, br=None):
+        super(StaticSet, self).__init__(con, br)
+        if br is None:
+            self.data.update({'camliType': 'static-set',
+                              'members': []})
 
     def save(self, members=[]):
         self.data.update({'members': members})
@@ -207,10 +208,11 @@ class StaticSet(Schema):
 
 class Bytes(Schema):
     """ Bytes schema. """
-    def __init__(self, con):
-        super(Bytes, self).__init__(con)
-        self.data.update({'camliType': 'bytes',
-                          'parts': []})
+    def __init__(self, con, br=None):
+        super(Bytes, self).__init__(con, br)
+        if br is None:
+            self.data.update({'camliType': 'bytes',
+                              'parts': []})
 
     def save(self):
         res = self.con.put_blobs([self.json()])
