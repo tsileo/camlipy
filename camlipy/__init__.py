@@ -14,6 +14,7 @@ import tempfile
 import requests
 
 from camlipy.filewriter import put_file
+from camlipy.filereader import get_file
 
 __all__ = ['compute_hash', 'check_hash', 'Camlistore']
 
@@ -107,7 +108,7 @@ class Camlistore(object):
             out = tempfile.SpooledTemporaryFile(max_size=1024 << 10)
 
             # Check if the blob contains binary data
-            if r.headers['content-type'] == 'application/octet-stream':
+            if not self.describe_blob(blobref).get('camliType'):
                 while 1:
                     buf = r.raw.read(512 << 10)
                     if buf:
@@ -238,7 +239,10 @@ class Camlistore(object):
         r = requests.get(describe_url, auth=self.auth)
         r.raise_for_status()
 
-        return r.json()
+        return r.json()['meta'][blobref]
 
     def put_file(self, path=None, fileobj=None, permanode=False):
         return put_file(self, path=path, fileobj=fileobj, permanode=permanode)
+
+    def get_file(self, blob_ref, fileobj=None):
+        return get_file(self, blob_ref=blob_ref, fileobj=fileobj)

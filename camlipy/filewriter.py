@@ -157,6 +157,7 @@ class FileWriter(object):
                     self.spans = self.spans[:children_from]
             else:
                 eof = True
+                children = []
 
             current_span = Span(last, self.n, bits, children, chunk_cnt)
 
@@ -269,4 +270,9 @@ def put_file(con, path=None, fileobj=None, permanode=False):
     parts = file_writer.bytes_writer(to_bytes=False)
 
     file_schema = File(con, path, file_name=fileobj.name)
-    return file_schema.save(parts, permanode=permanode)
+
+    blob_ref = file_schema.save(parts, permanode=permanode)
+
+    log.info('{uploaded} blobs uploaded ({size}bytes), {existing} skipped.'.format(**file_writer.cnt))
+
+    return blob_ref

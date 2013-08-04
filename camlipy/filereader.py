@@ -55,23 +55,23 @@ class FileReader(object):
                     yield sp
                 yield span.br
 
-    def build(self):
-        out = tempfile.TemporaryFile()
+    def build(self, fileobj=None):
+        if fileobj is None:
+            fileobj = tempfile.TemporaryFile()
         for br in self.spans_to_br():
             blob = self.con.get_blob(br)
-            out.write(blob.read())
-        out.seek(0)
-        return out
+            fileobj.write(blob.read())
+        fileobj.seek(0)
+        return fileobj
 
-    def build_old(self):
-        out = tempfile.TemporaryFile()
-        for br in self.spans_to_br():
-            blob = self.con.get_blob(br)
-            while 1:
-                buf = blob.read(4096)
-                if buf:
-                    out.write(buf)
-                else:
-                    break
-        out.seek(0)
-        return out
+
+def get_file(con, blob_ref, fileobj=None):
+    """ Helper for download a file from his blobRef
+    to a fileobj.
+    """
+    if fileobj is None:
+        fileobj = tempfile.NamedTemporaryFile()
+
+    file_reader = FileReader(con, blob_ref)
+    file_reader.load_spans()
+    return file_reader.build(fileobj=fileobj)
