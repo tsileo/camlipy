@@ -75,9 +75,10 @@ class FileWriter(object):
         self.buf_spans = {}
 
         # To generate the end report.
-        self.cnt = {'existing': 0,
+        self.cnt = {'skipped': 0,
+                    'skipped_size': 0,
                     'uploaded': 0,
-                    'size': 0}
+                    'uploaded_size': 0}
 
     def _upload_spans(self, force=False):
         """ Actually upload/put the blobs. """
@@ -88,9 +89,10 @@ class FileWriter(object):
             self.buf_spans = {}
             for rec in resp['received']:
                 self.cnt['uploaded'] += 1
-                self.cnt['size'] += rec['size']
-            for br in resp['existing']:
-                self.cnt['existing'] += 1
+                self.cnt['uploaded_size'] += rec['size']
+            for rec in resp['skipped']:
+                self.cnt['skipped'] += 1
+                self.cnt['skipped_size'] += rec['size']
 
     def upload_last_span(self):
         """ Empty the current blob buffer, prepare the blob,
@@ -176,6 +178,7 @@ class FileWriter(object):
 
         # Upload left chunks
         assert self.n == self.size
+
         self._upload_spans(force=True)
         return chunk_cnt
 
@@ -273,6 +276,6 @@ def put_file(con, path=None, fileobj=None, permanode=False):
 
     blob_ref = file_schema.save(parts, permanode=permanode)
 
-    log.info('{uploaded} blobs uploaded ({size}bytes), {existing} skipped.'.format(**file_writer.cnt))
+    log.info('Uploaded: {uploaded} blobs, {uploaded_size}bytes. Skipped {skipped} skipped, {skipped_size}bytes.'.format(**file_writer.cnt))
 
     return blob_ref

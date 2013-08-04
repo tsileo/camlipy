@@ -69,6 +69,7 @@ def get_file(con, blob_ref, fileobj=None):
     """ Helper for download a file from his blobRef
     to a fileobj.
     """
+    # TOOD restore to file with UNIX meta-data
     if fileobj is None:
         fileobj = tempfile.NamedTemporaryFile()
 

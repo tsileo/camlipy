@@ -54,7 +54,7 @@ class TestFileWriterAndFileReader(CamliPyTestCase):
         log.info('FileWriter2 cnt={0}'.format(file_writer2.cnt))
 
         self.assertEqual(file_writer2.cnt['uploaded'], 0)
-        self.assertEqual(file_writer2.cnt['size'], 0)
+        self.assertEqual(file_writer2.cnt['uploaded_size'], 0)
 
 
 if __name__ == '__main__':

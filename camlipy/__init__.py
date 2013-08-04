@@ -146,7 +146,7 @@ class Camlistore(object):
 
     def put_blobs(self, blobs):
         """ Upload blobs using with standard multi-part upload.
-        Returns a dict with received (blobref and size) and existing (blobref only)
+        Returns a dict with received (blobref and size) and skipped (blobref only)
         """
         blobs2 = {}
         for blob in blobs:
@@ -161,13 +161,13 @@ class Camlistore(object):
         blobrefs_stat = set([s['blobRef'] for s in stat_res['stat']])
 
         blobrefs_missing = blobrefs - blobrefs_stat
-        blobrefs_existing = blobrefs - blobrefs_missing
+        blobrefs_skipped = blobrefs - blobrefs_missing
 
         if DEBUG:
             log.debug('blobs missing: {0}'.format(blobrefs_missing))
-            log.debug('blobs existing: {0}'.format(blobrefs_existing))
+            log.debug('blobs skipped: {0}'.format(blobrefs_skipped))
 
-        res = {'existing': blobrefs_existing,
+        res = {'skipped': stat_res['stat'],
                'received': []}
 
         if DEBUG:

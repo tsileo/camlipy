@@ -28,7 +28,7 @@ class TestCamliPy(CamliPyTestCase):
         resp2 = self.server.put_blobs([test_blob_str])
 
         self.assertTrue(len(resp2['received']) == 0)
-        self.assertEqual(set([test_blob_br]), resp2['existing'])
+        self.assertEqual([{'blobRef': test_blob_br, 'size': 4096}], resp2['skipped'])
 
     def testPutBlobFileobj(self):
         test_blob_file = tempfile.TemporaryFile()
