@@ -16,6 +16,9 @@ log = logging.getLogger(__name__)
 class FileReader(object):
     def __init__(self, con, blob_ref):
         self.con = con
+        blob_metadata = self.con.describe_blob(blob_ref)
+        if blob_metadata['camliType'] == 'permanode':
+            blob_ref = blob_metadata['permanode']['attr']['camliContent'][0]
         self.blob_ref = blob_ref
         self.spans = None
 

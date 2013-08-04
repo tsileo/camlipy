@@ -43,12 +43,14 @@ class DirReader(object):
     def __init__(self, con, br, path):
         if not os.path.isdir(path):
             os.mkdir(path)
-
+        blob_metadata = con.describe_blob(br)
+        if blob_metadata['camliType'] == 'permanode':
+            br = blob_metadata['permanode']['attr']['camliContent'][0]
         self.br = br
         self.con = con
         self.path = path
 
-    def restore(self):
+    def download(self):
         return self._read_dir(self.br)
 
     def _read_dir(self, br, base_root=None):

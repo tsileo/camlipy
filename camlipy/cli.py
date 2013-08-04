@@ -1,8 +1,10 @@
+# -*- coding: utf-8 -*-
 """Camlipy command line tool.
 
 Usage:
   camlipy put [-] [<file>...] [--permanode]
   camlipy get <blob_ref> [--contents]
+  camlipy config <server_url>
   camlipy -h | --help
   camlipy --version
 
@@ -15,11 +17,25 @@ import sys
 import os
 import logging
 
+import simplejson as json
 from docopt import docopt
 
 from camlipy import __version__, Camlistore
 
-c = Camlistore('http://localhost:3179')
+DEFAULT_SERVER = 'http://localhost:3179'
+CAMLISTORE_CLIENT_CONFIG = os.path.expanduser('~/.config/camlistore/client-config.json')
+CAMLIPY_CONFIG = os.path.expanduser('~/.config/camlipy/config.json')
+
+
+def load_conf(path):
+    return json.loads(open(CAMLISTORE_CLIENT_CONFIG, 'rb').read())
+
+server = DEFAULT_SERVER
+for path in [CAMLISTORE_CLIENT_CONFIG, CAMLIPY_CONFIG]:
+    if os.path.isfile(CAMLISTORE_CLIENT_CONFIG):
+        server = load_conf(CAMLISTORE_CLIENT_CONFIG)['server']
+
+c = Camlistore(server)
 
 log = logging.getLogger(__name__)
 
@@ -47,8 +63,17 @@ def piped_in():
 
 def main():
     arguments = docopt(__doc__, version=__version__)
+    if arguments['config']:
+        # Write a basic configuration file.
+        conf = {'server': arguments['<server_url>']}
+        config_path = os.path.expanduser('~/.config/camlipy/')
+        if not os.path.isdir(config_path):
+            os.mkdir(config_path)
+        with open(os.path.join(config_path, 'config.json'), 'wb') as fh:
+            fh.write(json.dumps(conf))
 
-    if arguments['put']:
+    elif arguments['put']:
+        # Put sub-command
         if arguments['-']:
             # Read stdin
             data = piped_in()
@@ -62,7 +87,12 @@ def main():
     elif arguments['get']:
         blob = c.get_blob(arguments['<blob_ref>'])
         blob_metadata = c.describe_blob(arguments['<blob_ref>'])
-        if arguments['--contents']:
+        if not arguments['--content'] and blob_metadata['camliType'] == 'permanode':
+            new_br = blob_metadata['permanode']['attr']['camliContent'][0]
+            blob = c.get_blob(new_br)
+            blob_metadata = c.describe_blob(new_br)
+
+        if arguments['--contents'] or blob_metadata['camliType'] not in ['file', 'directory']:
             if isinstance(blob, dict):
                 log.info(blob)
             else:
