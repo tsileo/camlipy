@@ -231,6 +231,8 @@ class FileWriter(object):
 
             # Make a blobRef with the span data
             schema.add_blob_ref(span.br, span.to - span._from)
+            log.info('#'*400)
+            log.info(schema.json())
 
         if camlipy.DEBUG:
             log.debug('Resulting Bytes schema: {0}'.format(schema.json()))

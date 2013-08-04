@@ -18,14 +18,13 @@ class FileReader(object):
         self.con = con
         self.blob_ref = blob_ref
         self.spans = None
-        self.schema = Schema(self.con, blob_ref)
 
     def load_spans(self):
         self.spans = self._load_spans(self.blob_ref)
 
     def _load_spans(self, blob_ref):
         spans = []
-        parts = self.schema.data['parts']
+        parts = Schema(self.con, blob_ref).data['parts']
         for index, part in enumerate(parts):
             if 'bytesRef' in part:
                 # The associated blobRef => the span
@@ -64,7 +63,7 @@ class FileReader(object):
             fileobj.write(blob.read())
         fileobj.seek(0)
         if hasattr(fileobj, 'name'):
-            apply_stat_info(fileobj.name, self.schema.data)
+            apply_stat_info(fileobj.name, Schema(self.con, self.blob_ref).data)
         return fileobj
 
 
