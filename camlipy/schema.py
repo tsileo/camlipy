@@ -237,41 +237,37 @@ class FileCommon(Schema):
     def __init__(self, con, path=None, blob_ref=None):
         super(FileCommon, self).__init__(con, blob_ref)
         self.path = path
-
-        self.data.update(get_stat_info(path))
+        if self.path:
+            self.data.update(get_stat_info(path))
 
 
 class File(FileCommon):
     """ File schema with helper for uploading small files. """
-    def __init__(self, con, path=None, blob_ref=None):
+    def __init__(self, con, path=None, file_name=None, blob_ref=None):
+        """ file_name is guessed from path if provided. """
         super(File, self).__init__(con, path, blob_ref)
+        self.data.update({'camliType': 'file'})
         if path and os.path.isfile(path):
-            self.data.update({'camliType': 'file',
-                              'fileName': os.path.basename(path)})
+            self.data.update({'fileName': os.path.basename(path)})
+        else:
+            self.data.update({'fileName': file_name})
 
-    def save(self, permanode=False):
-        if self.path and os.path.isfile(self.path):
-            received = self.con.put_blobs([open(self.path, 'rb')])
+    def save(self, parts, permanode=False):
+        self.data.update({'parts': parts})
 
-            if received:
-                received = received['received']
-            # TODO handle if nothing is received because it already there
-            self.data.update({'parts': received})
+        res = self.con.put_blobs([self.json()])
 
-            res = self.con.put_blobs([self.json()])
+        if len(res['received']) == 1:
+            blob_ref = res['received'][0]['blobRef']
+        else:
+            blob_ref = self.con.get_hash(self.json())
 
-            if len(res['received']) == 1:
-                blob_ref = res['received'][0]['blobRef']
-            else:
-                blob_ref = self.con.get_hash(self.json())
-
-            self.blob_ref = blob_ref
-
-            if permanode:
-                permanode = Permanode(self.con).save(self.data['fileName'])
-                Claim(self.con, permanode).set_attribute('camliContent',
-                                                         blob_ref)
-                return permanode
+        self.blob_ref = blob_ref
+        if permanode:
+            permanode = Permanode(self.con).save(camli_content=self.blob_ref,
+                                                 title=self.data['fileName'],
+                                                 tags=[])
+            return permanode
         return self.blob_ref
 
 
@@ -296,9 +292,8 @@ class Directory(FileCommon):
                 self.blob_ref = blob_ref
 
                 if permanode:
-                    permanode = Permanode(self.con).save(self.data['fileName'])
-                    Claim(self.con, permanode).set_attribute('camliContent',
-                                                             blob_ref)
+                    permanode = Permanode(self.con).save(camli_content=self.blob_ref,
+                                                         title=self.data['fileName'])
                     return permanode
 
         return self.blob_ref

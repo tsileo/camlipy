@@ -56,5 +56,6 @@ class TestFileWriterAndFileReader(CamliPyTestCase):
         self.assertEqual(file_writer2.cnt['uploaded'], 0)
         self.assertEqual(file_writer2.cnt['size'], 0)
 
+
 if __name__ == '__main__':
     unittest.main()

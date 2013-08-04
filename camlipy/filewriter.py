@@ -1,7 +1,5 @@
 # -*- coding: utf-8 -*-
 
-__author__ = 'Thomas Sileo (thomas@trucsdedev.com)'
-
 """ Helper for uploading file, takes care of chunking file, create the file schema. """
 
 __author__ = 'Thomas Sileo (thomas@trucsdedev.com)'
@@ -11,7 +9,7 @@ import os
 
 import camlipy
 from camlipy.rollsum import Rollsum
-from camlipy.schema import Bytes
+from camlipy.schema import Bytes, File
 
 
 MAX_BLOB_SIZE = 1 << 20
@@ -82,6 +80,7 @@ class FileWriter(object):
                     'size': 0}
 
     def _upload_spans(self, force=False):
+        """ Actually upload/put the blobs. """
         if len(self.buf_spans) == 10 or force:
             if camlipy.DEBUG:
                 log.debug('Upload spans')
@@ -94,6 +93,10 @@ class FileWriter(object):
                 self.cnt['existing'] += 1
 
     def upload_last_span(self):
+        """ Empty the current blob buffer, prepare the blob,
+        and add it to the spans buffer (they are uploaded once they
+        are ten blobs in the buffer).
+        """
         if camlipy.DEBUG:
             log.debug('Add span to buffer: {0}'.format(self.spans[-1]))
 
@@ -105,6 +108,7 @@ class FileWriter(object):
         self._upload_spans()
 
     def chunk(self):
+        """ Chunk the file with Rollsum to a tree of Spans. """
         if camlipy.DEBUG:
             log.debug('Start chunking, total size: {0}'.format(self.size))
         chunk_cnt = 0
@@ -174,14 +178,24 @@ class FileWriter(object):
         self._upload_spans(force=True)
         return chunk_cnt
 
-    def chunk_to_schema(self):
-        if camlipy.DEBUG:
-            log.debug('Converting spans to Bytes Schema')
+    def bytes_writer(self, to_bytes=True):
+        """ Transform the span in a blobRef/bytesRef tree.
 
-    def bytes_writer(self):
-        return self._bytes_writer(self.spans)
+        if `to_bytes' is True, returns a Bytes schema,
+        if False, it returns the list of parts (ready to
+        be injected in a File schema.)
 
-    def _bytes_writer(self, spans):
+        """
+        return self._bytes_writer(self.spans, to_bytes=to_bytes)
+
+    def _bytes_writer(self, spans, to_bytes=True):
+        """ Actually transform the span in a blobRef/bytesRef tree.
+
+        if `to_bytes' is True, returns a Bytes schema,
+        if False, it returns the list of parts (ready to
+        be injected in a File schema.)
+
+        """
         schema = Bytes(self.con)
         if camlipy.DEBUG:
             log.debug('Starting spans: {0}'.format(spans))
@@ -208,7 +222,7 @@ class FileWriter(object):
 
                 if camlipy.DEBUG:
                     log.debug('Embedding a bytesRef')
-                schema.add_bytes_ref(self._bytes_writer(span.children), children_size)
+                schema.add_bytes_ref(self._bytes_writer(span.children, True), children_size)
 
             # Make a blobRef with the span data
             schema.add_blob_ref(span.br, span.to - span._from)
@@ -216,9 +230,12 @@ class FileWriter(object):
         if camlipy.DEBUG:
             log.debug('Resulting Bytes schema: {0}'.format(schema.json()))
 
-        self.con.put_blobs([schema.json()])
+        if to_bytes:
+            self.con.put_blobs([schema.json()])
 
-        return camlipy.compute_hash(schema.json())
+            return camlipy.compute_hash(schema.json())
+
+        return schema.data['parts']
 
     def check_spans(self):
         """ Debug methods. """
@@ -234,3 +251,14 @@ class FileWriter(object):
                 for sp in self._check_spans(span.children):
                     yield sp
                 yield span.chunk_cnt
+
+
+def put_file(con, path=None, fileobj=None, permanode=False):
+    if path is not None and os.path.isfile(path):
+        fileobj = open(path, 'rb')
+    file_writer = FileWriter(con, fileobj=fileobj)
+    file_writer.chunk()
+    parts = file_writer.bytes_writer(to_bytes=False)
+
+    file_schema = File(con, path, file_name=fileobj.name)
+    return file_schema.save(parts, permanode=permanode)

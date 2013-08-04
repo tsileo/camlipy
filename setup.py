@@ -17,6 +17,7 @@ setup(
     packages=find_packages(exclude=['ez_setup', 'tests', 'tests.*']),
     long_description=read('README.rst'),
     install_requires=['requests'],
+    test_requires=['sh'],
     test_suite="camlipy.tests",
     classifiers=[
         "Development Status :: 4 - Beta",
