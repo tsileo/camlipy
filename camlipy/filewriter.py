@@ -254,8 +254,16 @@ class FileWriter(object):
 
 
 def put_file(con, path=None, fileobj=None, permanode=False):
-    if path is not None and os.path.isfile(path):
+    """ Helper for uploading a file to a Camlistore server.
+
+    Specify either a path, or a fileobj.
+
+    Can also create a permanode.
+
+    """
+    if path is not None:
         fileobj = open(path, 'rb')
+
     file_writer = FileWriter(con, fileobj=fileobj)
     file_writer.chunk()
     parts = file_writer.bytes_writer(to_bytes=False)

@@ -13,6 +13,8 @@ import tempfile
 
 import requests
 
+from camlipy.filewriter import put_file
+
 __all__ = ['compute_hash', 'check_hash', 'Camlistore']
 
 CAMLIVERSION = 1
@@ -81,8 +83,8 @@ class Camlistore(object):
         r.raise_for_status()
         return r.json()
 
-    @classmethod
-    def get_hash(cls, blob):
+    @staticmethod
+    def get_hash(blob):
         return compute_hash(blob)
 
     def get_blob(self, blobref):
@@ -237,3 +239,6 @@ class Camlistore(object):
         r.raise_for_status()
 
         return r.json()
+
+    def put_file(self, path=None, fileobj=None, permanode=False):
+        return put_file(self, path=path, fileobj=fileobj, permanode=permanode)
