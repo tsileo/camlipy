@@ -15,6 +15,7 @@ import requests
 
 from camlipy.filewriter import put_file
 from camlipy.filereader import get_file
+from camlipy.directory import put_directory, get_directory
 
 __all__ = ['compute_hash', 'check_hash', 'Camlistore']
 
@@ -246,3 +247,9 @@ class Camlistore(object):
 
     def get_file(self, blob_ref, fileobj=None):
         return get_file(self, blob_ref=blob_ref, fileobj=fileobj)
+
+    def put_directory(self, path):
+        return put_directory(self, path)
+
+    def get_directory(self, br, path):
+        return get_directory(self, br, path)
