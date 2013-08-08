@@ -12,6 +12,7 @@ Options:
   -h --help      Show this screen.
   --version      Show version.
   --permanode    Create a permanode.
+  --contents     Output the blob to stdin.
 """
 import sys
 import os
@@ -87,11 +88,16 @@ def main():
     elif arguments['get']:
         blob = c.get_blob(arguments['<blob_ref>'])
         blob_metadata = c.describe_blob(arguments['<blob_ref>'])
+
+        # Quickly check if it the blob is a permanode,
+        # and we want its camliContent
         if not arguments['--content'] and blob_metadata['camliType'] == 'permanode':
             new_br = blob_metadata['permanode']['attr']['camliContent'][0]
+            # Fetch the new blob
             blob = c.get_blob(new_br)
             blob_metadata = c.describe_blob(new_br)
 
+        # Check if we need to display blob contents directly to stdin.
         if arguments['--contents'] or blob_metadata['camliType'] not in ['file', 'directory']:
             if isinstance(blob, dict):
                 log.info(blob)

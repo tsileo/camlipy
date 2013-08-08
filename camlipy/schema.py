@@ -113,6 +113,9 @@ class Schema(object):
         """ Call the API to describe the blob. """
         return self.con.describe_blob(self.blob_ref)
 
+    def __getattr__(self, attr):
+        return self.data.get(attr)
+
 
 class Permanode(Schema):
     """ Permanode Schema with helpers for claims. """
