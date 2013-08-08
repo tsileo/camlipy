@@ -14,7 +14,7 @@ from camlipy.schema import StaticSet, Directory, apply_stat_info
 log = logging.getLogger(__name__)
 
 
-def _put_directory(con, path):
+def _put_directory(con, path, permanode=False):
     """ Put a directory, this function is called recursively over sub-directories. """
     # Initialization of the current directory schema.
     directory = Directory(con, path)
@@ -27,18 +27,18 @@ def _put_directory(con, path):
     for f in files:
         static_set_members.append(con.put_file(os.path.join(root, f)))
     for d in dirs:
-        static_set_members.append(_put_directory(con, os.path.join(root, d)))
+        static_set_members.append(_put_directory(con, os.path.join(root, d), permanode=False))
 
     static_set_br = static_set.save(static_set_members)
 
     # We return the directory blobRef
-    return directory.save(static_set_br)
+    return directory.save(static_set_br, permanode=permanode)
 
 
-def put_directory(con, path):
+def put_directory(con, path, permanode=False):
     """ Helper to put a directory. """
     assert os.path.isdir(path)
-    return _put_directory(con, path)
+    return _put_directory(con, path, permanode=permanode)
 
 
 def _get_directory(con, br, base_path):
@@ -63,6 +63,10 @@ def _get_directory(con, br, base_path):
 
 
 def get_directory(con, br, path):
+    # Check if the blobRef is a permanode
+    blob_metadata = con.describe_blob(br)
+    if blob_metadata['camliType'] == 'permanode':
+        br = blob_metadata['permanode']['attr']['camliContent'][0]
     # Create the destination path if it doesn't exists.
     if not os.path.isdir(path):
         os.mkdir(path)
