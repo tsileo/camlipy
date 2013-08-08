@@ -13,6 +13,10 @@ It means you can download file uploaded with ``camput`` or the web ui, and file 
 TODO
 ====
 
+- Better integrity check ?s
+- A better put_blobs that raises Exception
+- A put_blob helper
+- Add support for the search API
 - Handle symlink/hard link (inode)
 - Handle multi-claim in ``Claim``
 - Check out Keep schema
@@ -31,7 +35,10 @@ Getting Started
 	c.get_blob('sha1-0d31c43041edf303d9d136c918a1337abc9bde97')
 
 	# Dump blobs without metadata
-	c.put_blobs(['My Blob', open('/path/to/file', 'rb')])
+	c.put_blobs(['My Blob'])
+	# Or
+	with open('/path/to/file', 'rb') as fh:
+	    c.put_blobs([fh])
 
 	# Put/restore files
 	c.put_file('/path/to/myfile')

@@ -248,8 +248,8 @@ class Camlistore(object):
     def get_file(self, blob_ref, fileobj=None):
         return get_file(self, blob_ref=blob_ref, fileobj=fileobj)
 
-    def put_directory(self, path):
-        return put_directory(self, path)
+    def put_directory(self, path, permanode=False):
+        return put_directory(self, path, permanode=permanode)
 
     def get_directory(self, br, path):
         return get_directory(self, br, path)
