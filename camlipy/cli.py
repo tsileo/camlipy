@@ -106,9 +106,9 @@ def main():
                 log.info(blob.read())
         elif blob_metadata['camliType'] == 'file':
             output = arguments['--output']
-            if not ouput:
+            if not output:
                 output = blob_metadata['file']['fileName']
-            with open(ouput, 'wb') as fh:
+            with open(output, 'wb') as fh:
                 c.get_file(arguments['<blob_ref>'], fh)
         elif blob_metadata['camliType'] == 'directory':
             output = arguments['--output']
