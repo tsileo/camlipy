@@ -3,7 +3,7 @@
 
 Usage:
   camlipy put [-] [<file>...] [--permanode]
-  camlipy get <blob_ref> [--contents]
+  camlipy get <blob_ref> [--contents] [--output=<destination>]
   camlipy config <server_url>
   camlipy -h | --help
   camlipy --version
@@ -78,25 +78,26 @@ def main():
         if arguments['-']:
             # Read stdin
             data = piped_in()
-            # TODO gerer le put blob
+            br = c.put_blob(data)
+            log.info(br)
         for f in arguments['<file>']:
             if os.path.isfile(f):
                 br = c.put_file(f, permanode=arguments['--permanode'])
                 log.info('{0}: {1}'.format(f, br))
-            # TODO handle directory
+            elif os.path.isdir(f):
+                br = c.put_directory(f, permanode=arguments['--permanode'])
+                log.info('{0}: {1}'.format(f, br))
 
     elif arguments['get']:
         blob = c.get_blob(arguments['<blob_ref>'])
         blob_metadata = c.describe_blob(arguments['<blob_ref>'])
-
         # Quickly check if it the blob is a permanode,
         # and we want its camliContent
-        if not arguments['--content'] and blob_metadata['camliType'] == 'permanode':
+        if not arguments['--contents'] and blob_metadata['camliType'] == 'permanode':
             new_br = blob_metadata['permanode']['attr']['camliContent'][0]
             # Fetch the new blob
             blob = c.get_blob(new_br)
             blob_metadata = c.describe_blob(new_br)
-
         # Check if we need to display blob contents directly to stdin.
         if arguments['--contents'] or blob_metadata['camliType'] not in ['file', 'directory']:
             if isinstance(blob, dict):
@@ -104,10 +105,10 @@ def main():
             else:
                 log.info(blob.read())
         elif blob_metadata['camliType'] == 'file':
-            log.info()
+            with open(blob_metadata['file']['fileName'], 'wb') as fh:
+                c.get_file(arguments['<blob_ref>'], fh)
         elif blob_metadata['camliType'] == 'directory':
-            log.info()
-        # TODO handle file/directory
+            c.get_directory(arguments['<blob_ref>'], os.getcwd())
 
 if __name__ == '__main__':
     main()
