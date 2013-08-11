@@ -105,9 +105,15 @@ def main():
             else:
                 log.info(blob.read())
         elif blob_metadata['camliType'] == 'file':
-            with open(blob_metadata['file']['fileName'], 'wb') as fh:
+            output = arguments['--output']
+            if not ouput:
+                output = blob_metadata['file']['fileName']
+            with open(ouput, 'wb') as fh:
                 c.get_file(arguments['<blob_ref>'], fh)
         elif blob_metadata['camliType'] == 'directory':
+            output = arguments['--output']
+            if not output:
+                output = os.getcwd()
             c.get_directory(arguments['<blob_ref>'], os.getcwd())
 
 if __name__ == '__main__':
