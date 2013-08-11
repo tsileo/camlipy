@@ -149,20 +149,24 @@ class Camlistore(object):
         """ Upload blobs using with standard multi-part upload.
         Returns a dict with received (blobref and size) and skipped (blobref only)
         """
-        blobs2 = {}
+        # First we create a dict {blobRef: blob, ...}
+        blobrefs = {}
         for blob in blobs:
-            blobs2[compute_hash(blob)] = blob
+            blobrefs[compute_hash(blob)] = blob
 
-        blobrefs = set([compute_hash(blob) for blob in blobs])
+        # And a set containing every blobRefs
+        blobrefs_all = set(blobrefs.keys())
 
-        stat_res = self._stat(blobrefs)
+        # Perform a stat to check which blobs are already present
+        # and to fetch uploadUrl and maxUploadSize.
+        stat_res = self._stat(blobrefs_all)
         upload_url = stat_res['uploadUrl']
         max_upload_size = stat_res['maxUploadSize']
 
         blobrefs_stat = set([s['blobRef'] for s in stat_res['stat']])
 
-        blobrefs_missing = blobrefs - blobrefs_stat
-        blobrefs_skipped = blobrefs - blobrefs_missing
+        blobrefs_missing = blobrefs_all - blobrefs_stat
+        blobrefs_skipped = blobrefs_all - blobrefs_missing
 
         if DEBUG:
             log.debug('blobs missing: {0}'.format(blobrefs_missing))
@@ -178,7 +182,7 @@ class Camlistore(object):
         r_files = {}
 
         for br in blobrefs_missing:
-            blob = blobs2[br]
+            blob = blobrefs[br]
             bref = compute_hash(blob)
             if isinstance(blob, basestring):
                 blob_content = blob
@@ -213,6 +217,16 @@ class Camlistore(object):
             batch_res = self._put_blobs(upload_url, r_files)
 
             res['received'].extend(batch_res['received'])
+
+        blobrefs_failed = blobrefs_all.difference([d['blobRef'] for d in res['received']])
+        blobrefs_failed.difference_update([d['blobRef'] for d in res['skipped']])
+
+        if len(blobrefs_failed):
+            if DEBUG:
+                for br in blobrefs_failed:
+                    log.debug('Blob with br:{0}, content:{1} failed.'.format(br, blobrefs[br]))
+
+            raise Exception('Some blobs failed to upload: {0}'.format(blobrefs_failed))
 
         return res
 

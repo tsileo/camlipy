@@ -13,15 +13,12 @@ It means you can download file uploaded with ``camput`` or the web ui, and file 
 TODO
 ====
 
-- Better integrity check ?s
-- A better put_blobs that raises Exception
-- A put_blob helper
 - Add support for the search API
 - Handle symlink/hard link (inode)
 - Handle multi-claim in ``Claim``
 - Check out Keep schema
 - Create a C extension for the rolling checksum part.
-
+- A read-only FUSE support?
 
 Getting Started
 ===============
@@ -36,7 +33,7 @@ Getting Started
 
 	# Dump blobs without metadata
 	c.put_blobs(['My Blob'])
-	# Or
+	# or
 	with open('/path/to/file', 'rb') as fh:
 	    c.put_blobs([fh])
 
