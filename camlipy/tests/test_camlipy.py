@@ -18,17 +18,20 @@ class TestCamliPy(CamliPyTestCase):
         test_blob_str = os.urandom(4096)
         resp = self.server.put_blobs([test_blob_str])
         self.assertEqual(resp['received'], [{'blobRef': self.compute_hash(test_blob_str), 'size': 4096}])
+        self.assertEqual(resp['success'], [self.compute_hash(test_blob_str)])
 
     def testPutExistingBlob(self):
         test_blob_str = os.urandom(4096)
         test_blob_br = self.compute_hash(test_blob_str)
         resp = self.server.put_blobs([test_blob_str])
         self.assertEqual(resp['received'], [{'blobRef': self.compute_hash(test_blob_str), 'size': 4096}])
+        self.assertEqual(resp['success'], [self.compute_hash(test_blob_str)])
 
         resp2 = self.server.put_blobs([test_blob_str])
 
         self.assertTrue(len(resp2['received']) == 0)
         self.assertEqual([{'blobRef': test_blob_br, 'size': 4096}], resp2['skipped'])
+        self.assertEqual([test_blob_br], resp2['success'])
 
     def testPutBlobFileobj(self):
         test_blob_file = tempfile.TemporaryFile()
@@ -68,6 +71,12 @@ class TestCamliPy(CamliPyTestCase):
 
         stat_resp = self.server._stat([blob_br])
         self.assertEqual(stat_resp['stat'][0], {'blobRef': blob_br, 'size': 4096})
+
+    def testPutBlobHelper(self):
+        test_blob_str = os.urandom(4096)
+        expected_br = self.compute_hash(test_blob_str)
+        br = self.server.put_blob(test_blob_str)
+        self.assertEqual(expected_br, br)
 
 if __name__ == '__main__':
     unittest.main()

@@ -155,7 +155,7 @@ class Camlistore(object):
             blobrefs[compute_hash(blob)] = blob
 
         # And a set containing every blobRefs
-        blobrefs_all = set(blobrefs.keys())
+        blobrefs_all = frozenset(blobrefs.keys())
 
         # Perform a stat to check which blobs are already present
         # and to fetch uploadUrl and maxUploadSize.
@@ -163,7 +163,7 @@ class Camlistore(object):
         upload_url = stat_res['uploadUrl']
         max_upload_size = stat_res['maxUploadSize']
 
-        blobrefs_stat = set([s['blobRef'] for s in stat_res['stat']])
+        blobrefs_stat = frozenset([s['blobRef'] for s in stat_res['stat']])
 
         blobrefs_missing = blobrefs_all - blobrefs_stat
         blobrefs_skipped = blobrefs_all - blobrefs_missing
@@ -218,8 +218,11 @@ class Camlistore(object):
 
             res['received'].extend(batch_res['received'])
 
-        blobrefs_failed = blobrefs_all.difference([d['blobRef'] for d in res['received']])
-        blobrefs_failed.difference_update([d['blobRef'] for d in res['skipped']])
+        blobs_received = [d['blobRef'] for d in res['received']]
+        blobs_skipped = [d['blobRef'] for d in res['skipped']]
+
+        blobrefs_failed = set(blobrefs_all.difference(blobs_received))
+        blobrefs_failed.difference_update(blobs_skipped)
 
         if len(blobrefs_failed):
             if DEBUG:
@@ -227,6 +230,9 @@ class Camlistore(object):
                     log.debug('Blob with br:{0}, content:{1} failed.'.format(br, blobrefs[br]))
 
             raise Exception('Some blobs failed to upload: {0}'.format(blobrefs_failed))
+
+        res['success'] = list(blobs_received)
+        res['success'].extend(blobs_skipped)
 
         return res
 
@@ -255,6 +261,17 @@ class Camlistore(object):
         r.raise_for_status()
 
         return r.json()['meta'][blobref]
+
+    def put_blob(self, blob):
+        """ Shortcut/helper for uploading a single blob.
+
+        Blob can be either a string or a fileobj.
+
+        """
+        res = self.put_blobs([blob])
+        blob_ref = compute_hash(blob)
+        if blob_ref in res['success']:
+            return blob_ref
 
     def put_file(self, path=None, fileobj=None, permanode=False):
         return put_file(self, path=path, fileobj=fileobj, permanode=permanode)

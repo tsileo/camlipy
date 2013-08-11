@@ -127,12 +127,7 @@ class Permanode(Schema):
 
     def save(self, camli_content=None, title=None, tags=[]):
         """ Create the permanode, takes optional title and tags. """
-        blob_ref = None
-        res = self.con.put_blobs([self.sign()])
-        if len(res['received']) == 1:
-            blob_ref = res['received'][0]['blobRef']
-        elif len(res['skipped']) == 1:
-            blob_ref = res['skipped'][0]['blobRef']
+        blob_ref = self.con.put_blob(self.sign())
 
         if blob_ref:
             self.blob_ref = blob_ref
@@ -190,7 +185,7 @@ class Claim(Schema):
         self.data.update({'claimType': 'set-attribute',
                           'attribute': attr,
                           'value': val})
-        return self.con.put_blobs([self.sign()])
+        return self.con.put_blob(self.sign())
 
     def del_attribute(self, attr, val=None):
         if camlipy.DEBUG:
@@ -202,7 +197,7 @@ class Claim(Schema):
                           'attribute': attr})
         if val is not None:
             self.data.update({'value': val})
-        return self.con.put_blobs([self.sign()])
+        return self.con.put_blob(self.sign())
 
     def add_attribute(self, attr, val):
         if camlipy.DEBUG:
@@ -213,7 +208,7 @@ class Claim(Schema):
         self.data.update({'claimType': 'add-attribute',
                           'attribute': attr,
                           'value': val})
-        return self.con.put_blobs([self.sign()])
+        return self.con.put_blob(self.sign())
 
 
 class StaticSet(Schema):
@@ -227,11 +222,7 @@ class StaticSet(Schema):
     def save(self, members=[]):
         self.data.update({'members': members})
 
-        res = self.con.put_blobs([self.json()])
-        if len(res['received']) == 1:
-            blob_ref = res['received'][0]['blobRef']
-        elif len(res['skipped']) == 1:
-            blob_ref = res['skipped'][0]['blobRef']
+        blob_ref = self.con.put_blob(self.json())
 
         if blob_ref:
             self.blob_ref = blob_ref
@@ -248,11 +239,7 @@ class Bytes(Schema):
                               'parts': []})
 
     def save(self):
-        res = self.con.put_blobs([self.json()])
-        if len(res['received']) == 1:
-            blob_ref = res['received'][0]['blobRef']
-        elif len(res['skipped']) == 1:
-            blob_ref = res['skipped'][0]['blobRef']
+        blob_ref = self.con.put_blob(self.json())
 
         if blob_ref:
             self.blob_ref = blob_ref
@@ -292,12 +279,7 @@ class File(FileCommon):
     def save(self, parts, permanode=False):
         self.data.update({'parts': parts})
 
-        res = self.con.put_blobs([self.json()])
-
-        if len(res['received']) == 1:
-            blob_ref = res['received'][0]['blobRef']
-        elif len(res['skipped']) == 1:
-            blob_ref = res['skipped'][0]['blobRef']
+        blob_ref = self.con.put_blob(self.json())
 
         self.blob_ref = blob_ref
         if permanode:
@@ -319,12 +301,7 @@ class Directory(FileCommon):
 
     def save(self, static_set_blobref, permanode=False):
         self.data.update({'entries': static_set_blobref})
-        res = self.con.put_blobs([self.json()])
-
-        if len(res['received']) == 1:
-            blob_ref = res['received'][0]['blobRef']
-        elif len(res['skipped']) == 1:
-            blob_ref = res['skipped'][0]['blobRef']
+        blob_ref = self.con.put_blob(self.json())
 
         if blob_ref:
             self.blob_ref = blob_ref
