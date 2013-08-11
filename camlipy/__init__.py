@@ -274,13 +274,33 @@ class Camlistore(object):
             return blob_ref
 
     def put_file(self, path=None, fileobj=None, permanode=False):
+        """ Shortcut for uploading a file along with its meta-data.
+
+        Call camlipy.filewriter.put_file under the hood.
+
+        """
         return put_file(self, path=path, fileobj=fileobj, permanode=permanode)
 
     def get_file(self, blob_ref, fileobj=None):
+        """ Shortcut for downloading/restoring a file.
+
+        Call camlipy.filereader.get_file under the hood.
+
+        """
         return get_file(self, blob_ref=blob_ref, fileobj=fileobj)
 
     def put_directory(self, path, permanode=False):
+        """ Shortcut for upload an entire directory.
+
+        Call camlipy.directory.put_directory under the hood.
+
+        """
         return put_directory(self, path, permanode=permanode)
 
     def get_directory(self, br, path):
+        """ Shortcut for restoring/retrieving a directory.
+
+        Call camlipy.directory.get_directory under the hood.
+
+        """
         return get_directory(self, br, path)
