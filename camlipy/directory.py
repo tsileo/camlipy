@@ -63,6 +63,7 @@ def _get_directory(con, br, base_path):
 
 
 def get_directory(con, br, path):
+    """ Download a directory. """
     # Check if the blobRef is a permanode
     blob_metadata = con.describe_blob(br)
     if blob_metadata['camliType'] == 'permanode':

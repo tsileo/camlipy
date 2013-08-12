@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 """ Camlistore client. """
 
 __author__ = 'Thomas Sileo (thomas@trucsdedev.com)'
@@ -193,8 +191,6 @@ class Camlistore(object):
                 blob.seek(0, 2)
                 blob_size = blob.tell()
 
-            # If max_upload_size will be exceeded with this blob,
-            # upload the current batch/buffer
             if batch_size + blob_size > max_upload_size:
                 if DEBUG:
                     log.debug('Upload first batch before continue, batch size:{0}'.format(batch_size))

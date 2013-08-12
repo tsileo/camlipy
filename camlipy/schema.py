@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """ Helper for creating/loading schemas. """
 
 __author__ = 'Thomas Sileo (thomas@trucsdedev.com)'
