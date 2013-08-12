@@ -1,0 +1,244 @@
+@import url('//fonts.googleapis.com/css?family=Open+Sans:400italic,700italic,400,700|Inconsolata');
+
+body {
+    font-family: "Open Sans", "Helvetica Neue", Helvetica, Arial, sans-serif;
+    font-size: 15px;
+    background-color: white;
+    color: #000;
+    margin: 0;
+    padding: 0;
+}
+
+.related {
+    display:none;
+}
+
+div.footer {
+    padding: 40px 0 40px 0;
+    font-size: 14px;
+    color: #999;
+}
+
+div.highlight {
+    background-color: white;
+}
+
+dt:target, .highlight {
+    background: #FAF3E8;
+}
+
+div.topic, div.seealso, div.note {
+    background-color: #eee;
+}
+
+pre, tt {
+    font-family: 'Inconsolata', 'Consolas', 'Menlo', 'Deja Vu Sans Mono', 'Bitstream Vera Sans Mono', monospace;
+}
+
+table.docutils {
+    border: 1px solid #999;
+    -moz-box-shadow: 2px 2px 4px #eee;
+    -webkit-box-shadow: 2px 2px 4px #eee;
+    box-shadow: 2px 2px 4px #eee;
+}
+
+table.docutils td, table.docutils th {
+    border: 1px solid #999;
+    padding: 0.25em 0.7em;
+}
+
+table.field-list, table.footnote {
+    border: none;
+    -moz-box-shadow: none;
+    -webkit-box-shadow: none;
+    box-shadow: none;
+}
+
+table.footnote {
+    margin: 15px 0;
+    width: 100%;
+    border: 1px solid #eee;
+    background: #fdfdfd;
+    font-size: 0.9em;
+}
+
+table.footnote + table.footnote {
+    margin-top: -15px;
+    border-top: none;
+}
+
+table.field-list th {
+    padding: 0 0.8em 0 0;
+    font-size: 12px;
+    width: 100px;
+}
+
+table.field-list td {
+    padding: 0;
+}
+
+table.footnote td.label {
+    width: 0px;
+    padding: 0.3em 0 0.3em 0.5em;
+}
+
+table.footnote td {
+    padding: 0.3em 0.5em;
+}
+
+dl {
+    margin: 0;
+    padding: 0;
+}
+
+dl dd {
+    margin-left: 30px;
+}
+
+      pre {
+        margin: 22px 2px 22px 2px;
+        padding: 11px;
+        color: #000;
+        font-size: 0.95em;
+        background: #eee;
+        line-height: 1.125em;
+        overflow-x: auto;
+  border-radius: 3px;
+  -moz-border-radius: 3px;
+  -webkit-border-radius: 3px;
+      }
+
+div.sphinxsidebar #searchbox input[type="text"] {
+    width: 150px;
+}
+
+blockquote {
+    margin: 22px 2px 22px 2px;
+    padding-left: 40px;
+    color: #999;
+    font-style: italic;
+}
+
+h3, h2, h1 {
+  font-weight: 600;
+}
+
+hr {
+  color: #eee;
+  background-color: #eee;
+  height: 1px;
+  border: none;
+}
+
+div.documentwrapper {
+}
+
+div.sphinxsidebar {
+    background: #fed92a;
+}
+div.sphinxsidebar ul {
+    margin: 40px 0 0 0;
+    padding-left: 0;
+    list-style-type: none;
+}
+
+div.sphinxsidebar ul li {
+    margin-right: 5px;
+        display: inline;
+
+}
+
+div.sphinxsidebar a {
+    color: #000;
+    text-decoration: none;
+}
+
+div.body {
+    max-width: 640px;
+    padding: 20px 40px 0px 40px;
+}
+
+div.sphinxsidebarwrapper {
+    padding: 20px;   
+}
+
+.sideblock {
+    float:left;
+    width:280px;
+    margin-left: 20px;
+}
+.clear {
+    clear:both;
+}
+
+.headerblock {
+}
+@media screen and (min-width: 1024px) {
+    .sideblock {
+        float:none;
+        width: auto;
+        margin-left: 0px;
+    }
+    div.sphinxsidebarwrapper {
+    padding: 40px 20px;   
+}
+    div.sphinxsidebar {
+        width: 25%;
+        height: 100%;
+        position: fixed;
+        top: 0;
+        left: 0;
+    }
+    div.sphinxsidebar ul li {
+
+    }
+
+
+.sideblock h3 {
+    margin-top:20px;
+}
+
+    div.documentwrapper {
+        width: 75%;
+        position: absolute;
+        top: 0;
+        left: 25%;
+        overflow-x: hidden;
+        overflow-y: hidden;
+
+    }
+}
+
+a {
+    color: #2595c5;
+}
+
+a.muted, .footer a {
+    color: #666666;
+}
+
+.rtd_doc_footer {
+    display: none;
+}
+a.headerlink {
+    color: #f2f2f2;
+    padding: 0px 4px;
+    text-decoration: none;
+}
+a.headerlink:hover {
+    color: #ccc;
+}
+
+.sideblock h1 {
+    margin-top:0;
+    padding-top: 0;
+}
+div.sideblock h3 {
+    margin-top:10px;
+}
+.headerblock p a {
+    text-decoration: underline;
+}
+.headerblock .ghlink {
+    text-decoration: none;
+}
