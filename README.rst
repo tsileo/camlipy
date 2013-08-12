@@ -29,6 +29,13 @@ Getting Started
 
 	c = Camlistore('http://localhost:3179')
 
+	# Basic put/get
+	my_blob = 'my blob'
+	blob_ref = c.put_blob(my_blob)
+
+	restored_blob = c.get_blob(blob_ref)
+
+	# Retrieve a blob
 	c.get_blob('sha1-0d31c43041edf303d9d136c918a1337abc9bde97')
 
 	# Dump blobs without metadata
@@ -48,6 +55,9 @@ Getting Started
 	with open('/path/to/restored_file', 'rb') as fh:
 	    c.get_file('sha1-0d31c43041edf303d9d136c918a1337abc9bde97', fh)
 
+	# Put/restore directories
+	blob_ref = c.put_directory('/path/to/my/dir')
+	c.get_directory(blob_ref)
 
 Working the command line tool
 -----------------------------
