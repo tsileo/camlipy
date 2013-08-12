@@ -65,7 +65,7 @@ class Camlistore(object):
         auth: tuple (user, password) if authentication is enabled.
 
     """
-    def __init__(self, server, auth=None):
+    def __init__(self, server='http://localhost:3179', auth=None):
         self.server = server
         self.auth = auth
         self.conf = self._conf_discovery()
