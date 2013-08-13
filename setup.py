@@ -17,7 +17,7 @@ setup(
     url='https://github.com/tsileo/camlipy',
     packages=find_packages(exclude=['ez_setup', 'tests', 'tests.*']),
     long_description=read('README.rst'),
-    install_requires=['requests', 'dirtools', 'docopt'],
+    install_requires=['dirtools', 'docopt', 'requests'],
     test_requires=['sh'],
     test_suite="camlipy.tests",
     entry_points={'console_scripts': ['camlipy = camlipy.cli:main']},
