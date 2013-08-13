@@ -15,6 +15,15 @@ First, you need to create a ``Camlistore`` before interacting with the API.
 
 	c = Camlistore('http://localhost:3179')
 
+If you have authentication enabled, just provide a tuple ``('username', 'password')``.
+
+.. code-block:: python
+
+	from camlipy import Camlistore
+
+	c = Camlistore('http://localhost:3179', auth=('username', 'password'))
+
+
 In the following examples, ``c`` is always an instance of ``Camlistore``.
 
 Each blob is identified by its unique hash, its blob ref, like sha1-bd7d19bf8cf5fdbe955ac17541e215989f2a9ba7.
