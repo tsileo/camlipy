@@ -47,12 +47,12 @@ Getting Started
 	# Put/restore files
 	c.put_file('/path/to/myfile')
 	# or
-	c.put_file(fileobj=open('/path/to/myfile'))
+	c.put_file(fileobj=open('/path/to/myfile'), permanode=True)
 
 	# Get as a fileobj (temporary file)
 	c.get_file('sha1-0d31c43041edf303d9d136c918a1337abc9bde97')
 	# Or get directly in a file
-	with open('/path/to/restored_file', 'rb') as fh:
+	with open('/path/to/restored_file', 'wb') as fh:
 	    c.get_file('sha1-0d31c43041edf303d9d136c918a1337abc9bde97', fh)
 
 	# Put/restore directories

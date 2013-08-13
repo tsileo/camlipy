@@ -246,7 +246,7 @@ class Bytes(Schema):
         return self.blob_ref
 
     def _add_ref(self, ref_type, blob_ref, size):
-        self.data['parts'].append({ref_type: blob_ref, 'size': size})
+        self.parts.append({ref_type: blob_ref, 'size': size})
 
     def add_blob_ref(self, blob_ref, size):
         self._add_ref('blobRef', blob_ref, size)
@@ -275,7 +275,7 @@ class File(FileCommon):
         else:
             self.data.update({'fileName': file_name})
 
-    def save(self, parts, permanode=False):
+    def save(self, parts, permanode=False, tags=[]):
         self.data.update({'parts': parts})
 
         blob_ref = self.con.put_blob(self.json())
@@ -283,8 +283,8 @@ class File(FileCommon):
         self.blob_ref = blob_ref
         if permanode:
             permanode = Permanode(self.con).save(camli_content=self.blob_ref,
-                                                 title=self.data['fileName'],
-                                                 tags=[])
+                                                 title=self.fileName,
+                                                 tags=tags)
             return permanode
         return self.blob_ref
 
@@ -298,7 +298,7 @@ class Directory(FileCommon):
             dir_name = os.path.basename(os.path.normpath(path))
             self.data.update({'fileName': dir_name})
 
-    def save(self, static_set_blobref, permanode=False):
+    def save(self, static_set_blobref, permanode=False, tags=[]):
         self.data.update({'entries': static_set_blobref})
         blob_ref = self.con.put_blob(self.json())
 
@@ -306,6 +306,7 @@ class Directory(FileCommon):
             self.blob_ref = blob_ref
             if permanode:
                 permanode = Permanode(self.con).save(camli_content=self.blob_ref,
-                                                     title=self.data['fileName'])
+                                                     title=self.fileName,
+                                                     tags=tags)
                 return permanode
         return self.blob_ref

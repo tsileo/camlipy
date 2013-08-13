@@ -1,5 +1,6 @@
 import os
 from setuptools import setup, find_packages
+import camlipy
 
 
 def read(fname):
@@ -7,7 +8,7 @@ def read(fname):
 
 setup(
     name='camlipy',
-    version='0.0.0',
+    version=camlipy.__version__,
     author='Thomas Sileo',
     author_email='thomas.sileo@gmail.com',
     description='',
