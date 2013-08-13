@@ -47,6 +47,7 @@ copyright = u'2013, Thomas Sileo'
 # |version| and |release|, also used in various other places throughout the
 # built documents.
 #
+sys.path.append(os.path.abspath('..'))
 import camlipy
 # The short X.Y version.
 version = camlipy.__version__
