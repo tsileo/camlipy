@@ -14,6 +14,7 @@ import requests
 from camlipy.filewriter import put_file
 from camlipy.filereader import get_file
 from camlipy.directory import put_directory, get_directory
+from camlipy.search import Search
 
 __all__ = ['compute_hash', 'check_hash', 'Camlistore']
 
@@ -67,6 +68,8 @@ class Camlistore(object):
         self.server = server
         self.auth = auth
         self.conf = self._conf_discovery()
+
+        self.public_key_blob_ref = self.conf['signing']['publicKeyBlobRef']
 
         self.url_blobRoot = urlparse.urljoin(self.server,
                                              self.conf['blobRoot'])
@@ -257,6 +260,17 @@ class Camlistore(object):
         r.raise_for_status()
 
         return r.json()['meta'][blobref]
+
+    def search(self, value, attr='', fuzzy=False, max=100):
+        """ Perform query with the same syntax as Camistore ui.
+
+        Examples of queries:
+        - tag:mytag
+        - title:my_text_file.txt
+        - my query
+
+        """
+        return Search(self).search(value, attr=attr, fuzzy=fuzzy, max=max)
 
     def put_blob(self, blob):
         """ Shortcut/helper for uploading a single blob.

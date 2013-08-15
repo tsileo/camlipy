@@ -59,6 +59,10 @@ Getting Started
 	blob_ref = c.put_directory('/path/to/my/dir')
 	c.get_directory(blob_ref)
 
+	# Search blobs
+	c.search('tag:mytag')
+
+
 Working the command line tool
 -----------------------------
 
