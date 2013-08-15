@@ -128,10 +128,10 @@ Exclude files/directories
 
 Camlipy relies on `Dirtools <https://github.com/tsileo/dirtools>`_ to support gitignore like syntax for excluding files/directories, it will looks for a ``.exclude`` file at the root, check out Dirtools documentation for more informations.
 
-Operations on permanode
------------------------
+Permanode
+---------
 
-You can also play directly with the ``Permanode`` object.
+You can play directly with the ``Permanode`` object.
 
 .. code-block:: python
 
@@ -158,3 +158,26 @@ You can also play directly with the ``Permanode`` object.
 
 	# Fetch the claims history
 	claims = permanode.claims()
+
+Static set
+----------
+
+You can also create static set easily.
+
+.. code-block:: python
+
+	static_set = c.static_set()
+	static_set_br = static_set.save([br1, br2, br3])
+
+Or you can use the ``add_add_to_static_set`` shortcut:
+
+.. code-block:: python
+
+	static_set_br = c.add_to_static_set([br1, br2, br3])
+
+Load an existing static set:
+
+.. code-block:: python
+
+	static_set = c.static_set(static_set_br)
+	members = static_set.members

@@ -15,7 +15,7 @@ from camlipy.filewriter import put_file
 from camlipy.filereader import get_file
 from camlipy.directory import put_directory, get_directory
 from camlipy.search import Search
-from camlipy.schema import Permanode
+from camlipy.schema import Permanode, StaticSet
 
 __all__ = ['compute_hash', 'check_hash', 'Camlistore']
 
@@ -319,3 +319,11 @@ class Camlistore(object):
     def permanode(self, blob_ref=None):
         """ Shortcut to initialize a permanode. """
         return Permanode(self, blob_ref)
+
+    def static_set(self, blob_ref=None):
+        """ Shortcut to initialize a static-set. """
+        return StaticSet(self, blob_ref)
+
+    def add_to_static_set(self, blob_refs):
+        """ Shortcut to create a new static-set. """
+        return self.static_set().save(blob_refs)
