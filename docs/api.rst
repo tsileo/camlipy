@@ -31,3 +31,9 @@ camlipy.schema
 
 .. automodule:: camlipy.schema
     :members:
+
+camlipy.search
+==============
+
+.. automodule:: camlipy.search
+    :members:
