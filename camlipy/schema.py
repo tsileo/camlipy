@@ -131,7 +131,7 @@ class Permanode(Schema):
         self.metadata = self.con.describe_blob(br)
         assert self.metadata['camliType'] == 'permanode'
 
-    def save(self, camli_content=None, title=None, tags=[]):
+    def save(self, camli_content=None, camli_member=None, title=None, tags=[]):
         """ Create the permanode, takes optional title and tags. """
         blob_ref = self.con.put_blob(self.sign())
 
@@ -139,6 +139,8 @@ class Permanode(Schema):
             self.blob_ref = blob_ref
             if camli_content is not None:
                 self.set_camli_content(camli_content)
+            if camli_member is not None:
+                self.set_camli_member(camli_member)
             if title is not None:
                 Claim(self.con, blob_ref).set_attribute('title', title)
             for tag in tags:
@@ -256,6 +258,17 @@ class StaticSet(Schema):
             self.blob_ref = blob_ref
 
         return self.blob_ref
+
+    def update(self, members=[]):
+        """ Update a static-set by creating a new one. """
+        if self.blob_ref:
+            new_members = list(self.members)
+            new_members.extend(members)
+            self.blob_ref = self.save(new_members)
+            return self.blob_ref
+        else:
+            self.blob_ref = self.save(members)
+            return self.blob_ref
 
 
 class Bytes(Schema):

@@ -181,3 +181,10 @@ Load an existing static set:
 
 	static_set = c.static_set(static_set_br)
 	members = static_set.members
+
+You can create a new static while updating its members:
+
+.. code-block:: python
+
+	static_set = c.static_set(static_set_br)
+	new_static_set_br = static_set.update([c.put_blob('my new blob')])
