@@ -13,8 +13,8 @@ It means you can download file uploaded with ``camput`` or the web ui, and file 
 TODO
 ====
 
-- Add support for the search API
 - Handle symlink/hard link (inode)
+- Sharing support
 - Handle multi-claim in ``Claim``
 - Check out Keep schema
 - Create a C extension for the rolling checksum part.

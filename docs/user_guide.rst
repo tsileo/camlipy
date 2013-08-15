@@ -120,7 +120,7 @@ Restore directories
 .. code-block:: python
 
 	c.get_directory('sha1-bd7d19bf8cf5fdbe955ac17541e215989f2a9ba7',
-					'/path/to/restored_dir')
+	                '/path/to/restored_dir')
 
 
 Exclude files/directories
@@ -132,3 +132,29 @@ Operations on permanode
 -----------------------
 
 You can also play directly with the ``Permanode`` object.
+
+.. code-block:: python
+
+	# Create a new permanode
+	permanode = c.permanode()
+	permanode.save(camli_content, title='My Title', tags=['list', 'of', 'tags'])
+	# Or load an existing one
+	permanode = c.permanode(permanode_blob_ref)
+
+	# Get/set the camliContent blob ref
+	blob_ref = permanode.get_camli_content()
+
+	permanode.set_camli_content(new_camli_content)
+
+	# Also handle camliMember
+	# Get/set the camliMember blob ref
+	blob_ref = permanode.get_camli_member()
+
+	permanode.set_camli_member(new_camli_member)
+
+	# You can also set/get any attribute
+	permanode.set_attr('title', 'My New Title')
+	permanode.get_attr('title')
+
+	# Fetch the claims history
+	claims = permanode.claims()

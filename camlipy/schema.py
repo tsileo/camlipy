@@ -120,9 +120,16 @@ class Permanode(Schema):
     """ Permanode Schema with helpers for claims. """
     def __init__(self, con, permanode_blob_ref=None):
         super(Permanode, self).__init__(con, permanode_blob_ref)
+        self.metadata = {}
         if permanode_blob_ref is None:
             self.data.update({'random': str(uuid.uuid4()),
                               'camliType': 'permanode'})
+        else:
+            self._fetch_metadata(permanode_blob_ref)
+
+    def _fetch_metadata(self, br):
+        self.metadata = self.con.describe_blob(br)
+        assert self.metadata['camliType'] == 'permanode'
 
     def save(self, camli_content=None, title=None, tags=[]):
         """ Create the permanode, takes optional title and tags. """
@@ -137,18 +144,37 @@ class Permanode(Schema):
             for tag in tags:
                 Claim(self.con, blob_ref).add_attribute('tag', tag)
 
+        self._fetch_metadata(blob_ref)
         return blob_ref
 
     def set_camli_content(self, camli_content):
         """ Create a new camliContent claim. """
-        Claim(self.con, self.blob_ref).set_attribute('camliContent', camli_content)
+        self.set_attr('camliContent', camli_content)
 
     def get_camli_content(self):
         """ Fetch the current camliContent blobRef. """
-        for claim in self.claims():
-            if claim['type'] == 'set-attribute' and \
-                    claim['attr'] == 'camliContent':
-                return claim['value']
+        return self.get_attr('camliContent')
+
+    def set_camli_member(self, camli_member):
+        """ Create a new camliMember claim. """
+        self.set_attr('camliMember', camli_member)
+
+    def get_camli_member(self):
+        """ Fetch the current camliMember blobRef. """
+        return self.get_attr('camliMember')
+
+    def get_attr(self, attr):
+        """ Retrieve attr from indexer. """
+        attr = self.metadata['permanode']['attr'].get(attr)
+        if attr and len(attr) == 1:
+            return attr[0]
+        return attr
+
+    def set_attr(self, attr, value):
+        """ Create a claim to set attr to value. """
+        Claim(self.con, self.blob_ref).set_attribute(attr, value)
+        # Reset the meta-data
+        self._fetch_metadata(self.blob_ref)
 
     def claims(self):
         """ Return claims for the current permanode. """
@@ -160,7 +186,10 @@ class Permanode(Schema):
 
         claims = []
         for claim in r.json()['claims']:
-            claim['date'] = datetime.strptime(claim['date'], '%Y-%m-%dT%H:%M:%S.%fZ')
+            try:
+                claim['date'] = datetime.strptime(claim['date'], '%Y-%m-%dT%H:%M:%S.%fZ')
+            except ValueError:
+                claim['date'] = datetime.strptime(claim['date'], '%Y-%m-%dT%H:%M:%SZ')
             claims.append(claim)
 
         return sorted(claims, key=lambda c: c['date'], reverse=True)
@@ -265,7 +294,7 @@ class FileCommon(Schema):
 
 
 class File(FileCommon):
-    """ File schema with helper for uploading small files. """
+    """ File schema. """
     def __init__(self, con, path=None, file_name=None, blob_ref=None):
         """ file_name is guessed from path if provided. """
         super(File, self).__init__(con, path, blob_ref)

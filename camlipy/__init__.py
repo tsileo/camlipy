@@ -15,6 +15,7 @@ from camlipy.filewriter import put_file
 from camlipy.filereader import get_file
 from camlipy.directory import put_directory, get_directory
 from camlipy.search import Search
+from camlipy.schema import Permanode
 
 __all__ = ['compute_hash', 'check_hash', 'Camlistore']
 
@@ -314,3 +315,7 @@ class Camlistore(object):
 
         """
         return get_directory(self, br, path)
+
+    def permanode(self, blob_ref=None):
+        """ Shortcut to initialize a permanode. """
+        return Permanode(self, blob_ref)
