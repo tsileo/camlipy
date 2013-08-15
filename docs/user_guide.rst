@@ -169,7 +169,7 @@ You can also create static set easily.
 	static_set = c.static_set()
 	static_set_br = static_set.save([br1, br2, br3])
 
-Or you can use the ``add_add_to_static_set`` shortcut:
+Or you can use the ``add_to_static_set`` shortcut:
 
 .. code-block:: python
 
