@@ -322,7 +322,7 @@ class Camlistore(object):
 
     def permanode_by_title(self, title):
         """ Shortcut to fetch the first permanode with the given title. """
-        res = self.search('title:OMGGG')['withAttr']
+        res = self.search('title:{0}'.format(title))['withAttr']
         if len(res):
             return self.permanode(res[0]['permanode'])
 
