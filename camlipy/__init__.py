@@ -320,6 +320,12 @@ class Camlistore(object):
         """ Shortcut to initialize a permanode. """
         return Permanode(self, blob_ref)
 
+    def permanode_by_title(self, title):
+        """ Shortcut to fetch the first permanode with the given title. """
+        res = self.search('title:OMGGG')['withAttr']
+        if len(res):
+            return self.permanode(res[0]['permanode'])
+
     def static_set(self, blob_ref=None):
         """ Shortcut to initialize a static-set. """
         return StaticSet(self, blob_ref)

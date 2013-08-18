@@ -159,6 +159,10 @@ You can play directly with the ``Permanode`` object.
 	# Fetch the claims history
 	claims = permanode.claims()
 
+	# Fetch a permanode by title
+	p = c.permanode_by_title('title')
+
+
 Static set
 ----------
 
