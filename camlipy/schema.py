@@ -115,6 +115,9 @@ class Schema(object):
     def __getattr__(self, attr):
         return self.data.get(attr)
 
+    def __repr__(self):
+        return '<Schema {0}:{1}>'.format(self.__class__.__name__, self.blob_ref)
+
 
 class Permanode(Schema):
     """ Permanode Schema with helpers for claims. """
