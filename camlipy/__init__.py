@@ -327,7 +327,8 @@ class Camlistore(object):
             return self.permanode(res['withAttr'][0]['permanode'])
         elif create:
             p = self.permanode()
-            return p.save(title=title)
+            p.save(title=title)
+            return p
 
     def static_set(self, blob_ref=None):
         """ Shortcut to initialize a static-set. """

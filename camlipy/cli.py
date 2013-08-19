@@ -4,7 +4,7 @@
 Usage:
   camlipy put [-] [<file>...] [--permanode]
   camlipy get <blob_ref> [--contents] [--output=<destination>]
-  camlipy config <server_url>
+  camlipy config <server_url> [<username> <password>]
   camlipy -h | --help
   camlipy --version
 
@@ -31,12 +31,16 @@ CAMLIPY_CONFIG = os.path.expanduser('~/.config/camlipy/config.json')
 def load_conf(path):
     return json.loads(open(CAMLISTORE_CLIENT_CONFIG, 'rb').read())
 
+camlikwargs = {}
 server = DEFAULT_SERVER
 for path in [CAMLISTORE_CLIENT_CONFIG, CAMLIPY_CONFIG]:
     if os.path.isfile(CAMLISTORE_CLIENT_CONFIG):
-        server = load_conf(CAMLISTORE_CLIENT_CONFIG)['server']
+        conf = load_conf(CAMLISTORE_CLIENT_CONFIG)
+        server = conf['server']
+        if conf.get('username'):
+            camlikwargs.update({'auth': (conf['username'], conf['password'])})
 
-c = Camlistore(server)
+c = Camlistore(server, **camlikwargs)
 
 log = logging.getLogger(__name__)
 
@@ -66,7 +70,9 @@ def main():
     arguments = docopt(__doc__, version=__version__)
     if arguments['config']:
         # Write a basic configuration file.
-        conf = {'server': arguments['<server_url>']}
+        conf = {'server': arguments['<server_url>'],
+                'username': arguments['<username>'],
+                'password': arguments['<password>']}
         config_path = os.path.expanduser('~/.config/camlipy/')
         if not os.path.isdir(config_path):
             os.mkdir(config_path)
