@@ -1,7 +1,7 @@
 """ Camlistore client. """
 
 __author__ = 'Thomas Sileo (thomas@trucsdedev.com)'
-__version__ = '0.1.0'
+__version__ = '0.1.1'
 
 import urlparse
 import logging
