@@ -29,13 +29,13 @@ CAMLIPY_CONFIG = os.path.expanduser('~/.config/camlipy/config.json')
 
 
 def load_conf(path):
-    return json.loads(open(CAMLISTORE_CLIENT_CONFIG, 'rb').read())
+    return json.loads(open(path, 'rb').read())
 
 camlikwargs = {}
 server = DEFAULT_SERVER
 for path in [CAMLISTORE_CLIENT_CONFIG, CAMLIPY_CONFIG]:
-    if os.path.isfile(CAMLISTORE_CLIENT_CONFIG):
-        conf = load_conf(CAMLISTORE_CLIENT_CONFIG)
+    if os.path.isfile(path):
+        conf = load_conf(path)
         server = conf['server']
         if conf.get('username'):
             camlikwargs.update({'auth': (conf['username'], conf['password'])})
