@@ -4,6 +4,12 @@
  User Guide
 ============
 
+Installation
+============
+
+	$ sudo pip install camlipy
+
+
 Getting started
 ===============
 

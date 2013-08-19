@@ -8,7 +8,7 @@ def read(fname):
 
 setup(
     name='camlipy',
-    version=camlipy.__version__,
+    version='0.1.0',
     author='Thomas Sileo',
     author_email='thomas.sileo@gmail.com',
     description='',
@@ -17,7 +17,7 @@ setup(
     url='https://github.com/tsileo/camlipy',
     packages=find_packages(exclude=['ez_setup', 'tests', 'tests.*']),
     long_description=read('README.rst'),
-    install_requires=['dirtools', 'docopt', 'requests'],
+    install_requires=['dirtools', 'docopt', 'requests', 'simplejson'],
     test_requires=['sh'],
     test_suite="camlipy.tests",
     entry_points={'console_scripts': ['camlipy = camlipy.cli:main']},
