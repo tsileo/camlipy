@@ -160,9 +160,9 @@ class Permanode(Schema):
         """ Fetch the current camliContent blobRef. """
         return self.get_attr('camliContent')
 
-    def set_camli_member(self, camli_member):
-        """ Create a new camliMember claim. """
-        self.set_attr('camliMember', camli_member)
+    def add_camli_member(self, camli_member):
+        """ Append a new camliMember. """
+        self.add_attr('camliMember', camli_member)
 
     def get_camli_member(self):
         """ Fetch the current camliMember blobRef. """
@@ -178,6 +178,18 @@ class Permanode(Schema):
     def set_attr(self, attr, value):
         """ Create a claim to set attr to value. """
         Claim(self.con, self.blob_ref).set_attribute(attr, value)
+        # Reset the meta-data
+        self._fetch_metadata(self.blob_ref)
+
+    def delete_attr(self, attr, value=None):
+        """ Create a claim to delete attr/attr:value. """
+        Claim(self.con, self.blob_ref).del_attribute(attr, value)
+        # Reset the meta-data
+        self._fetch_metadata(self.blob_ref)
+
+    def add_attr(self, attr, value):
+        """ Create a claim to add avlue to attr. """
+        Claim(self.con, self.blob_ref).add_attribute(attr, value)
         # Reset the meta-data
         self._fetch_metadata(self.blob_ref)
 

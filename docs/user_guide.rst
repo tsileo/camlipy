@@ -150,7 +150,7 @@ You can play directly with the ``Permanode`` object.
 	# Get/set the camliMember blob ref
 	blob_ref = permanode.get_camli_member()
 
-	permanode.set_camli_member(new_camli_member)
+	permanode.add_camli_member(new_camli_member)
 
 	# You can also set/get any attribute
 	permanode.set_attr('title', 'My New Title')
