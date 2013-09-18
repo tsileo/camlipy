@@ -74,6 +74,21 @@ Command-line tool
    command-line_tool
 
 
+Development
+===========
+
+Tests runs with ``devcam server`` (Camlistore development server), see `HACKING <>`_ from Camlistore.
+
+To execute the tests, just run:
+
+	$ python setup.py test
+
+Contribution
+------------
+
+Feel free to submit a pull request!
+
+
 API Documentation
 =================
 
