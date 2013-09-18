@@ -83,6 +83,21 @@ Camlipy provide a basic command line utility, that let put/get blobs. It support
 	$ echo 'My Blob' | camlipy put -
 
 
+Development
+===========
+
+Tests runs with ``devcam server`` (Camlistore development server), see `HACKING <>`_ from Camlistore.
+
+To execute the tests, just run:
+
+	$ python setup.py test
+
+Contribution
+------------
+
+Feel free to submit a pull request!
+
+
 License (MIT)
 =============
 
