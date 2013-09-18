@@ -13,9 +13,11 @@ from camlipy import Camlistore, compute_hash
 
 camlipy.DEBUG = True
 CAMLIPY_SERVER = os.environ.get('CAMLIPY_SERVER', 'http://localhost:3179/')
+CAMLIPY_CAMLISTORE_PATH = os.environ.get('CAMLIPY_CAMLISTORE_PATH',
+                                         os.path.expanduser('~/camlistore'))
 
 
 class CamliPyTestCase(unittest.TestCase):
     def setUp(self):
-        self.server = Camlistore(CAMLIPY_SERVER)
+        self.server = Camlistore(CAMLIPY_SERVER, auth=('', 'pass3179'))
         self.compute_hash = compute_hash

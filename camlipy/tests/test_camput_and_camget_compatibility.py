@@ -9,7 +9,7 @@ import tempfile
 
 import sh
 
-from camlipy.tests import CamliPyTestCase
+from camlipy.tests import CamliPyTestCase, CAMLIPY_CAMLISTORE_PATH
 from camlipy.filewriter import FileWriter, put_file
 
 logging.basicConfig(level=logging.DEBUG)
@@ -27,7 +27,10 @@ class TestCamputAndCamgetCompatibility(CamliPyTestCase):
         log.debug('Random file generated')
 
         log.info('Putting file with camput file:')
-        camput_blobref = sh.camput('file', test_file.name)
+        old_pwd = os.getcwd()
+        sh.cd(CAMLIPY_CAMLISTORE_PATH)
+        camput_blobref = sh.devcam('put', 'file', test_file.name)
+        sh.cd(old_pwd)
         log.info('Camput blobRef: {0}'.format(camput_blobref))
 
         file_writer = FileWriter(self.server, fileobj=test_file)
@@ -55,8 +58,12 @@ class TestCamputAndCamgetCompatibility(CamliPyTestCase):
         log.info('Camlipy put_file blobRef: {0}'.format(blob_ref))
 
         td = tempfile.mkdtemp()
-        sh.camget('-o', td, blob_ref)
+        old_pwd = os.getcwd()
 
+        sh.cd(CAMLIPY_CAMLISTORE_PATH)
+
+        sh.devcam('get', '-o', td, blob_ref)
+        sh.cd(old_pwd)
         original_hash = self.compute_hash(open(os.path.join(td,
                                                             test_file.name)))
         restored_hash = self.compute_hash(test_file)
