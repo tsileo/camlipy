@@ -77,7 +77,7 @@ Command-line tool
 Development
 ===========
 
-Tests runs with ``devcam server`` (Camlistore development server), see `HACKING <>`_ from Camlistore.
+Tests runs with ``devcam server`` (Camlistore development server), see `HACKING <https://github.com/bradfitz/camlistore/blob/master/HACKING>`_ from Camlistore.
 
 To execute the tests, just run:
 
