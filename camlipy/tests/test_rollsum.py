@@ -3,7 +3,9 @@
 __author__ = 'Thomas Sileo (thomas@trucsdedev.com)'
 
 import random
-from camlipy.rollsum import Rollsum, WINDOW_SIZE
+from camlipy.rollsum import Rollsum
+
+WINDOW_SIZE = 64
 
 
 def test_rollsum():
