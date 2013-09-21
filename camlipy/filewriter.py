@@ -8,7 +8,7 @@ import logging
 import os
 
 import camlipy
-from camlipy.rollsum import Rollsum
+from camlipy.rollsum_old import Rollsum
 from camlipy.schema import Bytes, File
 
 

@@ -256,11 +256,9 @@ class Camlistore(object):
         """ Return blob meta data. """
         describe = 'camli/search/describe?blobref={0}'.format(blobref)
         describe_url = urlparse.urljoin(self.url_searchRoot, describe)
-
         r = requests.get(describe_url, auth=self.auth)
         r.raise_for_status()
-
-        return r.json()['meta'][blobref]
+        return r.json().get('meta', {}).get(blobref, {})
 
     def search(self, value, attr='', fuzzy=False, max=100):
         """ Perform query with the same syntax as Camistore ui.

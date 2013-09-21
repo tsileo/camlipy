@@ -83,6 +83,17 @@ Camlipy provide a basic command line utility, that let put/get blobs. It support
 	$ echo 'My Blob' | camlipy put -
 
 
+Changelog
+=========
+
+0.2.0
+~~~~~
+
+**Mars 20 2013**
+
+- Ported rollsum to a C extension with swig, 30 seconds speedup for a 5MB files.
+
+
 Development
 ===========
 

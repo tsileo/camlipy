@@ -54,9 +54,7 @@ class TestCamliPy(CamliPyTestCase):
     def testGetBlob(self):
         data_len = (1024 << 10) + (4 << 10)
         blob_data = os.urandom(data_len)
-        blob_br = self.compute_hash(blob_data)
-        self.server.put_blobs([blob_data])
-
+        blob_br = self.server.put_blob(blob_data)
         fileobj = self.server.get_blob(blob_br)
         self.assertTrue(isinstance(fileobj, tempfile.SpooledTemporaryFile))
         self.assertEqual(len(fileobj.read()), data_len)

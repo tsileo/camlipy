@@ -1,4 +1,5 @@
 .fuse*
+*.so
 .subl*
 *.pyc
 *wip.py
