@@ -7,9 +7,13 @@ import logging
 import uuid
 import os
 import stat
-import grp
-import pwd
 from datetime import datetime
+
+try:
+    import grp
+    import pwd
+except ImportError:
+    pass
 
 import requests
 import simplejson as json
@@ -318,7 +322,11 @@ class FileCommon(Schema):
         super(FileCommon, self).__init__(con, blob_ref)
         self.path = path
         if self.path:
-            self.data.update(get_stat_info(path))
+            try:
+                # Unix only
+                self.data.update(get_stat_info(path))
+            except:
+                pass
 
 
 class File(FileCommon):
