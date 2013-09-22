@@ -3,10 +3,9 @@
 __author__ = 'Thomas Sileo (thomas@trucsdedev.com)'
 
 import unittest
-import logging
 import os
 
-import simplejson as json
+import ujson as json
 
 from camlipy.tests import CamliPyTestCase
 from camlipy.schema import Schema, Permanode, StaticSet

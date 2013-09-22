@@ -22,7 +22,7 @@ setup(
     packages=find_packages(exclude=['ez_setup', 'tests', 'tests.*']),
     ext_modules=[camlipy_rollsum],
     long_description=read('README.rst'),
-    install_requires=['dirtools', 'docopt', 'requests', 'simplejson', 'futures'],
+    install_requires=['dirtools', 'docopt', 'requests', 'ujson', 'futures'],
     test_requires=['sh'],
     test_suite="camlipy.tests",
     entry_points={'console_scripts': ['camlipy = camlipy.cli:main']},

@@ -16,7 +16,7 @@ except ImportError:
     pass
 
 import requests
-import simplejson as json
+import ujson as json
 
 import camlipy
 
