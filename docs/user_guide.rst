@@ -134,8 +134,15 @@ Exclude files/directories
 
 Camlipy relies on `Dirtools <https://github.com/tsileo/dirtools>`_ to support gitignore like syntax for excluding files/directories, it will looks for a ``.exclude`` file at the root, check out Dirtools documentation for more informations.
 
+Schema
+------
+
+Schema attribute are stored in a dict under the data attribute.
+You can retrieve data attribute like standard attribute, i.e. ``permanode.data['claimData']`` or ``permanode.claimData`` is the same.
+
+
 Permanode
----------
+~~~~~~~~~
 
 You can play directly with the ``Permanode`` object.
 
@@ -170,7 +177,7 @@ You can play directly with the ``Permanode`` object.
 
 
 Static set
-----------
+~~~~~~~~~~
 
 You can also create static set easily.
 

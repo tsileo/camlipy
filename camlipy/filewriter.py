@@ -109,11 +109,21 @@ class FileWriter(object):
         blob_ref = camlipy.compute_hash(chunk)
         self.spans[-1].br = blob_ref
         self.buf_spans[blob_ref] = chunk
-        with futures.ThreadPoolExecutor(max_workers=5) as executor:
-            executor.submit(self._upload_spans())
+        executor = futures.ThreadPoolExecutor(max_workers=2)
+        executor.submit(self._upload_spans())
+        executor.shutdown(wait=False)
 
     def chunk(self):
         """ Chunk the file with Rollsum to a tree of Spans. """
+        if self.size <= FIRST_CHUNK_SIZE:
+            if camlipy.DEBUG:
+                log.debug('Skip chunking, file size lower than first chunk: {0}'.format(self.size))
+                buf = self.reader.read(self.size)
+                br = self.con.put_blob(buf)
+                span = Span(br=br, size=self.size)
+                self.spans.append(span)
+                return 1
+
         if camlipy.DEBUG:
             log.debug('Start chunking, total size: {0}'.format(self.size))
         chunk_cnt = 0

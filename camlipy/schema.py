@@ -26,6 +26,11 @@ MAX_STAT_BLOB = 1000
 log = logging.getLogger(__name__)
 
 
+def dt_to_camli_iso(dt):
+    """ Convert a datetime to iso datetime compatible with camlistore. """
+    return dt.isoformat() + 'Z'
+
+
 def ts_to_camli_iso(ts):
     """ Convert timestamp to UTC iso datetime compatible with camlistore. """
     return datetime.utcfromtimestamp(ts).isoformat() + 'Z'
@@ -156,9 +161,9 @@ class Permanode(Schema):
         self._fetch_metadata(blob_ref)
         return blob_ref
 
-    def set_camli_content(self, camli_content):
+    def set_camli_content(self, camli_content, claim_date=None):
         """ Create a new camliContent claim. """
-        self.set_attr('camliContent', camli_content)
+        self.set_attr('camliContent', camli_content, claim_date=claim_date)
 
     def get_camli_content(self):
         """ Fetch the current camliContent blobRef. """
@@ -179,9 +184,9 @@ class Permanode(Schema):
             return attr[0]
         return attr
 
-    def set_attr(self, attr, value):
+    def set_attr(self, attr, value, claim_date=None):
         """ Create a claim to set attr to value. """
-        Claim(self.con, self.blob_ref).set_attribute(attr, value)
+        Claim(self.con, self.blob_ref).set_attribute(attr, value, claim_date=claim_date)
         # Reset the meta-data
         self._fetch_metadata(self.blob_ref)
 
@@ -216,6 +221,35 @@ class Permanode(Schema):
         return sorted(claims, key=lambda c: c['date'], reverse=True)
 
 
+class PlannedPermanode(Permanode):
+    """ A planned permanode is like a normal permanode,
+    except it have a meaningful "key" key, and a meaningful "claimDate",
+    so the signature for the given key, claimDate is always the same. """
+    def __init__(self, con, permanode_blob_ref=None, key=None, claim_date=None):
+        super(PlannedPermanode, self).__init__(con, permanode_blob_ref)
+
+    def save(self, camli_content=None, key=None,
+             claim_date=None, title=None, tags=[]):
+        if key and claim_date:
+            self.data.update({'key': key,
+                              'claimDate': dt_to_camli_iso(claim_date)})
+
+        blob_ref = self.con.put_blob(self.sign())
+
+        if blob_ref:
+            self.blob_ref = blob_ref
+
+            self.set_camli_content(camli_content, claim_date)
+
+            if title is not None:
+                Claim(self.con, blob_ref).set_attribute('title', title)
+            for tag in tags:
+                Claim(self.con, blob_ref).add_attribute('tag', tag)
+
+        self._fetch_metadata(blob_ref)
+        return blob_ref
+
+
 class Claim(Schema):
     """ Claim schema with support for set/add/del attribute. """
     def __init__(self, con, permanode_blobref, claim_blobref=None):
@@ -225,7 +259,7 @@ class Claim(Schema):
                           'camliType': 'claim',
                           'permaNode': permanode_blobref})
 
-    def set_attribute(self, attr, val):
+    def set_attribute(self, attr, val, claim_date=None):
         if camlipy.DEBUG:
             log.debug('Setting attribute {0}:{1} on permanode:{2}'.format(attr,
                                                                           val,
@@ -234,6 +268,11 @@ class Claim(Schema):
         self.data.update({'claimType': 'set-attribute',
                           'attribute': attr,
                           'value': val})
+
+        # Useful for planned permanode
+        if claim_date:
+            self.data.update({'claimDate': dt_to_camli_iso(claim_date)})
+
         return self.con.put_blob(self.sign())
 
     def del_attribute(self, attr, val=None):

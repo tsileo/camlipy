@@ -93,6 +93,8 @@ Changelog
 **Mars 20 2013**
 
 - Ported rollsum to a C extension with swig, 30 seconds speedup for a 5MB files.
+- Now uses ujson (faster) instead of simplejson
+- Skip file chunking for small files that fit in one chunk
 
 
 Development
