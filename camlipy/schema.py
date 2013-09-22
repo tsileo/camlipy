@@ -36,12 +36,16 @@ def ts_to_camli_iso(ts):
     return datetime.utcfromtimestamp(ts).isoformat() + 'Z'
 
 
-def camli_iso_to_ts(iso):
+def camli_iso_to_dt(iso):
     try:
         dt = datetime.strptime(iso, '%Y-%m-%dT%H:%M:%S.%fZ')
     except:
         dt = datetime.strptime(iso, '%Y-%m-%dT%H:%M:%SZ')
+    return dt
 
+
+def camli_iso_to_ts(iso):
+    dt = camli_iso_to_dt(iso)
     return int(dt.strftime('%s'))
 
 

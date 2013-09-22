@@ -4,11 +4,12 @@ __author__ = 'Thomas Sileo (thomas@trucsdedev.com)'
 
 import unittest
 import os
+from datetime import datetime
 
 import ujson as json
 
 from camlipy.tests import CamliPyTestCase
-from camlipy.schema import Schema, Permanode, StaticSet
+from camlipy.schema import Schema, Permanode, PlannedPermanode, StaticSet, camli_iso_to_dt
 import camlipy
 
 
@@ -49,6 +50,23 @@ class TestSchema(CamliPyTestCase):
         del permanode2.data['camliSig']
 
         self.assertDictEqual(permanode2.data, permanode.data)
+
+    def testPlannedPermanodeAndClaims(self):
+        br = self._createBlob()
+        key = 'mykey'
+        claim_date = datetime.now()
+        permanode = PlannedPermanode(self.server)
+        permanode_br = permanode.save(br, key, claim_date)
+
+        # Create a permanode with a camliContent claims
+        permanode_res = self.server.get_blob(permanode_br)
+        self.assertTrue(isinstance(permanode_res, dict))
+
+        # Test that we can load an existing permanode schema.
+        permanode2 = PlannedPermanode(self.server, permanode_br)
+
+        self.assertEqual(camli_iso_to_dt(permanode2.claimDate), claim_date)
+        self.assertEqual(permanode2.key, key)
 
     def testClaims(self):
         br = self._createBlob()
