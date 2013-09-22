@@ -11,7 +11,6 @@ from camlipy.tests import CamliPyTestCase
 from camlipy.filewriter import FileWriter
 from camlipy.filereader import FileReader
 
-logging.basicConfig(level=logging.DEBUG)
 log = logging.getLogger(__name__)
 
 

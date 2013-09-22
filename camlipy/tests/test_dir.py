@@ -9,7 +9,6 @@ from dirtools import Dir
 from camlipy.tests import CamliPyTestCase
 from camlipy.directory import put_directory, get_directory
 
-logging.basicConfig(level=logging.DEBUG)
 log = logging.getLogger(__name__)
 
 

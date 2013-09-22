@@ -12,8 +12,6 @@ from camlipy.tests import CamliPyTestCase
 from camlipy.schema import Schema, Permanode, StaticSet
 import camlipy
 
-logging.basicConfig(level=logging.DEBUG)
-
 
 class TestSchema(CamliPyTestCase):
     def testNewBasicSchema(self):

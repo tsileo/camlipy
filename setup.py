@@ -2,9 +2,9 @@ import os
 from setuptools import setup, find_packages, Extension
 
 
-example_module = Extension('camlipy._rollsum',
-                           sources=['camlipy/rollsum_wrap.c', 'camlipy/rollsum.c'],
-                           )
+camlipy_rollsum = Extension('camlipy._rollsum',
+                            sources=['camlipy/rollsum_wrap.c', 'camlipy/rollsum.c'],
+                            )
 
 
 def read(fname):
@@ -20,9 +20,9 @@ setup(
     keywords='camlistore storage backups blob',
     url='https://github.com/tsileo/camlipy',
     packages=find_packages(exclude=['ez_setup', 'tests', 'tests.*']),
-    ext_modules=[example_module],
+    ext_modules=[camlipy_rollsum],
     long_description=read('README.rst'),
-    install_requires=['dirtools', 'docopt', 'requests', 'simplejson'],
+    install_requires=['dirtools', 'docopt', 'requests', 'simplejson', 'futures'],
     test_requires=['sh'],
     test_suite="camlipy.tests",
     entry_points={'console_scripts': ['camlipy = camlipy.cli:main']},

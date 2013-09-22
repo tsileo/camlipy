@@ -4,12 +4,9 @@ __author__ = 'Thomas Sileo (thomas@trucsdedev.com)'
 
 import unittest
 import os
-import logging
 import tempfile
 
 from camlipy.tests import CamliPyTestCase
-
-logging.basicConfig(level=logging.DEBUG)
 
 
 class TestCamliPy(CamliPyTestCase):

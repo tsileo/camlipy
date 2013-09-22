@@ -7,8 +7,10 @@ __author__ = 'Thomas Sileo (thomas@trucsdedev.com)'
 import logging
 import os
 
+from concurrent import futures
+
 import camlipy
-from camlipy.rollsum_old import Rollsum
+from camlipy.rollsum import Rollsum
 from camlipy.schema import Bytes, File
 
 
@@ -107,7 +109,8 @@ class FileWriter(object):
         blob_ref = camlipy.compute_hash(chunk)
         self.spans[-1].br = blob_ref
         self.buf_spans[blob_ref] = chunk
-        self._upload_spans()
+        with futures.ThreadPoolExecutor(max_workers=5) as executor:
+            executor.submit(self._upload_spans())
 
     def chunk(self):
         """ Chunk the file with Rollsum to a tree of Spans. """
@@ -231,7 +234,6 @@ class FileWriter(object):
 
             # Make a blobRef with the span data
             schema.add_blob_ref(span.br, span.to - span._from)
-            log.info('#'*400)
             log.info(schema.json())
 
         if camlipy.DEBUG:
