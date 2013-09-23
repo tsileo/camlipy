@@ -90,11 +90,12 @@ Changelog
 0.2.0
 -----
 
-**Mars 20 2013**
+**September 23 2013**
 
 - Ported rollsum to a C extension with swig, 30 seconds speedup for a 5MB files.
-- Now uses ujson (faster) instead of simplejson
-- Skip file chunking for small files that fit in one chunk
+- Now uses ujson (faster) instead of simplejson.
+- Skip file chunking for small files that fit in one chunk.
+- New ``PlannedPermanode`` schema.
 
 
 Development

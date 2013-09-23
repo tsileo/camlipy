@@ -175,6 +175,22 @@ You can play directly with the ``Permanode`` object.
 	# Fetch a permanode by title
 	p = c.permanode_by_title('title')
 
+Planned permanode
+~~~~~~~~~~~~~~~~~
+
+A planned permanode is like a standard permanode except it must have a meaningful ``key`` and ``claim_date``.
+
+.. code-block:: python
+
+	# Create a new planned permanode
+	permanode = c.planned_permanode()
+	permanode.save(camli_content, key='permanode_key', claim_date=datetime(2013, 9, 23, 13, 3, 10))
+	# Or load an existing one
+	permanode = c.planned_permanode(permanode_blob_ref)
+
+	# Get/set the camliContent blob ref
+	blob_ref = permanode.get_camli_content()
+
 
 Static set
 ~~~~~~~~~~

@@ -229,7 +229,7 @@ class PlannedPermanode(Permanode):
     """ A planned permanode is like a normal permanode,
     except it have a meaningful "key" key, and a meaningful "claimDate",
     so the signature for the given key, claimDate is always the same. """
-    def __init__(self, con, permanode_blob_ref=None, key=None, claim_date=None):
+    def __init__(self, con, permanode_blob_ref=None):
         super(PlannedPermanode, self).__init__(con, permanode_blob_ref)
 
     def save(self, camli_content=None, key=None,
