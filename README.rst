@@ -4,10 +4,15 @@
 
 Unofficial Python client for `Camlistore <http://camlistore.org/>`_.
 
-This is a work in progress.
-
 Camlipy try to behave exactly the same way that the original Camlistore Go client.
 It means you can download file uploaded with ``camput`` or the web ui, and file uploaded with Camlipy works well with the ui and camget.
+
+
+.. image:: https://pypip.in/v/dirtools/badge.png
+        :target: https://crate.io/packages/dirtools
+
+.. image:: https://pypip.in/d/dirtools/badge.png
+        :target: https://crate.io/packages/dirtools
 
 
 Installation
@@ -23,7 +28,6 @@ TODO
 - Sharing support
 - Handle multi-claim in ``Claim``
 - Check out Keep schema
-- Create a C extension for the rolling checksum part.
 - A read-only FUSE support?
 
 Getting Started
