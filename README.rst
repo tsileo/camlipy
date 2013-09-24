@@ -8,11 +8,11 @@ Camlipy try to behave exactly the same way that the original Camlistore Go clien
 It means you can download file uploaded with ``camput`` or the web ui, and file uploaded with Camlipy works well with the ui and camget.
 
 
-.. image:: https://pypip.in/v/dirtools/badge.png
-        :target: https://crate.io/packages/dirtools
+.. image:: https://pypip.in/v/camlipy/badge.png
+        :target: https://crate.io/packages/camlipy
 
-.. image:: https://pypip.in/d/dirtools/badge.png
-        :target: https://crate.io/packages/dirtools
+.. image:: https://pypip.in/d/camlipy/badge.png
+        :target: https://crate.io/packages/camlipy
 
 
 Installation
