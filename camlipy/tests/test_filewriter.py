@@ -19,7 +19,7 @@ class TestFileWriterAndFileReader(CamliPyTestCase):
     def testBigFile(self):
         # Create a 1MB random file
         test_blob = tempfile.TemporaryFile()
-        test_blob.write(os.urandom(1024 << 10))
+        test_blob.write(os.urandom(52428800))  # 1024 << 10
 
         log.debug('Random file generated')
         test_blob.seek(0)

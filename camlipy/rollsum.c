@@ -49,7 +49,7 @@ uint32_t Rollsum_bits(Rollsum * r)
     return bits;
 }
 
-int Rollsum_on_split(Rollsum *r)
+unsigned int Rollsum_on_split(Rollsum *r)
 {
     if ((r->s2 & (BLOB_SIZE-1)) == ((~0) & (BLOB_SIZE-1)))
         return 1;
