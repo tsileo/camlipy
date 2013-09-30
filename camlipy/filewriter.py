@@ -10,7 +10,7 @@ import os
 from concurrent import futures
 
 import camlipy
-from camlipy.rollsum_old import Rollsum
+from camlipy.rollsum import Rollsum
 from camlipy.schema import Bytes, File
 
 

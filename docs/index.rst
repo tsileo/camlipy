@@ -83,6 +83,17 @@ To execute the tests, just run:
 
 	$ python setup.py test
 
+
+Building the C extension
+------------------------
+
+You must have `swig <http://www.swig.org/>`_ installed.
+
+	$ python setup.py build_ext --inplace
+	$ cd camlipy
+	$ swig -python rollsum.i
+
+
 Contribution
 ------------
 
