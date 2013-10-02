@@ -156,7 +156,7 @@ class Permanode(Schema):
             if camli_content is not None:
                 self.set_camli_content(camli_content)
             if camli_member is not None:
-                self.set_camli_member(camli_member)
+                self.add_camli_member(camli_member)
             if title is not None:
                 Claim(self.con, blob_ref).set_attribute('title', title)
             for tag in tags:
@@ -180,6 +180,10 @@ class Permanode(Schema):
     def get_camli_member(self):
         """ Fetch the current camliMember blobRef. """
         return self.get_attr('camliMember')
+
+    def add_camli_path(self, filename, permanode_blob_ref):
+        """ Append a new camliPath:filename => permanode_blob_ref """
+        self.add_attr('camliPath:{0}'.format(filename), permanode_blob_ref)
 
     def get_attr(self, attr):
         """ Retrieve attr from indexer. """

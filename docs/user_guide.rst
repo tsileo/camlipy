@@ -221,3 +221,13 @@ You can create a new static while updating its members:
 
 	static_set = c.static_set(static_set_br)
 	new_static_set_br = static_set.update([c.put_blob('my new blob')])
+
+
+Dynamic set
+~~~~~~~~~~~
+
+A dynamic set lets you keep track of multiple permanodes.
+
+.. code-block:: python
+
+	

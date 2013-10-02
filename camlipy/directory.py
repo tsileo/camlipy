@@ -41,6 +41,34 @@ def put_directory(con, path, permanode=False):
     return _put_directory(con, path, permanode=permanode)
 
 
+def _put_mutable_directory(con, path):
+    """ Put a mutable directory, this function is called recursively over sub-directories. """
+    # Initialization of the permanode that will hold the mutable directory
+    p = con.permanode()
+    p_title = os.path.basename(os.path.normpath(path))
+    mutable_files = []
+    root, dirs, files = Dir(path).walk().next()
+    for f in files:
+        file_br = con.put_file(os.path.join(root, f), permanode=True)
+        mutable_files.append((f, file_br))
+    for d in dirs:
+        dir_name = os.path.basename(os.path.normpath(os.path.join(root, d)))
+        dir_br = _put_mutable_directory(con, os.path.join(root, d))
+        mutable_files.append((dir_name, dir_br))
+
+    p_br = p.save(title=p_title)
+    for f_filename, f_br in mutable_files:
+        p.add_camli_path(f_filename, f_br)
+
+    # We return the permanode blobRef
+    return p_br
+
+
+def put_mutable_directory(con, path):
+    assert os.path.isdir(path)
+    return _put_mutable_directory(con, path)
+
+
 def _get_directory(con, br, base_path):
     # Load the directory schema
     directory = Directory(con, blob_ref=br)
@@ -77,3 +105,12 @@ def get_directory(con, br, path):
         # If so, update the destination blobRef
         br = blob_metadata['permanode']['attr']['camliContent'][0]
     _get_directory(con, br, path)
+
+
+def mutable_directory(con, br):
+    blob_metadata = con.describe_blob(br)
+    assert blob_metadata['camliType'] == 'permanode'
+    permanode_attr = blob_metadata['permanode']['attr']
+    camli_path = [k for k in permanode_attr.keys() if k.startswith('camliPath:')]
+    camli_path = [blob_metadata['permanode']['attr'][k][0] for k in camli_path]
+    # TODO finish
