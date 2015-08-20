@@ -15,7 +15,7 @@ setup(
     version='0.1.1',
     author='Thomas Sileo',
     author_email='thomas.sileo@gmail.com',
-    description='',
+    description='Unofficial Python client for Camlistore',
     license='MIT',
     keywords='camlistore storage backups blob',
     url='https://github.com/tsileo/camlipy',
